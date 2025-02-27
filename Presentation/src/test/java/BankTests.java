@@ -1,78 +1,102 @@
 import Application.Abstractions.Repositories.IBankAccountRepository;
 import Application.Abstractions.Repositories.IOperationRepository;
-import Application.Abstractions.Repositories.IUserRepository;
-import Application.Contracts.Interfaces.IUserService;
 import Application.Contracts.ResultTypes.OperationResult;
-import Application.Managers.UserManager;
 import Application.Models.Entites.BankAccount;
 import Application.Models.Entites.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
 import Application.Models.Utils.IdGenerator;
 import Application.Services.UserService;
-import DataAccess.BankAccountRepository;
-import DataAccess.OperationRepository;
-import DataAccess.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.Mockito.*;
 
 public class BankTests {
 
-    @Test
-    public void Scenario1() {
-        IdGenerator userIdGenerator = new IdGenerator();
-        IdGenerator bankAccountIdGenerator = new IdGenerator();
-        IUserRepository userRepository = new UserRepository();
-        IOperationRepository operationRepository = new OperationRepository();
-        IBankAccountRepository bankAccountRepository = new BankAccountRepository();
-        var user1 = new User(userIdGenerator, "test_login", "lim0sha", 22, Sex.Male, HairColor.Brown);
-        var bankAccount1 = new BankAccount(bankAccountIdGenerator, user1);
-        IUserService userService = new UserService(userRepository, bankAccountRepository, operationRepository, new UserManager());
+    @Mock
+    private IBankAccountRepository bankAccountRepository;
 
-        userService.CreateUser(user1);
-        userService.addBankAccount(user1, bankAccount1);
-        userService.Deposit(bankAccount1, 239.00);
-        userService.Withdraw(bankAccount1, 52.00);
+    @Mock
+    private IOperationRepository operationRepository;
 
-        assertEquals(187.00, bankAccountRepository.FindBankAccountById(bankAccount1.getId()).getBalance());
+    @InjectMocks
+    private UserService userService;
+
+    private BankAccount bankAccount;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        User user = new User(new IdGenerator(), "lim0sha", "Sasha", 22, Sex.Male, HairColor.Brown);
+        bankAccount = new BankAccount(new IdGenerator(), user);
+        bankAccount.setBalance(100.0);
     }
 
     @Test
-    public void Scenario2() {
-        IdGenerator userIdGenerator = new IdGenerator();
-        IdGenerator bankAccountIdGenerator = new IdGenerator();
-        IUserRepository userRepository = new UserRepository();
-        IOperationRepository operationRepository = new OperationRepository();
-        IBankAccountRepository bankAccountRepository = new BankAccountRepository();
-        var user1 = new User(userIdGenerator, "test_login", "lim0sha", 22, Sex.Male, HairColor.Brown);
-        var bankAccount1 = new BankAccount(bankAccountIdGenerator, user1);
-        IUserService userService = new UserService(userRepository, bankAccountRepository, operationRepository, new UserManager());
+    void testWithdrawWithSufficientBalance() {
+        Double withdrawAmount = 50.0;
+        Double initialBalance = bankAccount.getBalance();
 
-        userService.CreateUser(user1);
-        userService.addBankAccount(user1, bankAccount1);
-        userService.Deposit(bankAccount1, 52.00);
-        var withdrawResult = userService.Withdraw(bankAccount1, 239.00);
+        when(bankAccountRepository.FindBankAccountById(bankAccount.getId())).thenReturn(bankAccount);
+        when(bankAccountRepository.UpdateBankAccountBalance(bankAccount.getId(), initialBalance - withdrawAmount))
+                .thenAnswer(invocation -> {
+                    bankAccount.setBalance(initialBalance - withdrawAmount);
+                    return null;
+                });
+        when(operationRepository.AddOperation(any())).thenReturn(new OperationResult.Success());
 
-        assertEquals(OperationResult.OperationError.class, withdrawResult.getClass());
+        OperationResult operationResult = userService.Withdraw(bankAccount, withdrawAmount);
+
+        assertInstanceOf(OperationResult.Success.class, operationResult);
+        assertEquals(initialBalance - withdrawAmount, bankAccount.getBalance(), 0.001);
+        verify(bankAccountRepository, times(1)).UpdateBankAccountBalance(bankAccount.getId(), initialBalance - withdrawAmount);
+        verify(operationRepository, times(1)).AddOperation(any());
+
+        assertEquals(50.0, bankAccount.getBalance(), 0.001);
     }
 
     @Test
-    public void Scenario3() {
-        IdGenerator userIdGenerator = new IdGenerator();
-        IdGenerator bankAccountIdGenerator = new IdGenerator();
-        IUserRepository userRepository = new UserRepository();
-        IOperationRepository operationRepository = new OperationRepository();
-        IBankAccountRepository bankAccountRepository = new BankAccountRepository();
-        var user1 = new User(userIdGenerator, "test_login", "lim0sha", 22, Sex.Male, HairColor.Brown);
-        var bankAccount1 = new BankAccount(bankAccountIdGenerator, user1);
-        IUserService userService = new UserService(userRepository, bankAccountRepository, operationRepository, new UserManager());
+    void testWithdrawWithInsufficientBalance() {
+        Double withdrawAmount = 150.0;
 
-        userService.CreateUser(user1);
-        userService.addBankAccount(user1, bankAccount1);
-        userService.Deposit(bankAccount1, 52.00);
-        userService.Deposit(bankAccount1, 52.00);
+        when(bankAccountRepository.FindBankAccountById(bankAccount.getId())).thenReturn(bankAccount);
 
-        assertEquals(104.00, bankAccountRepository.FindBankAccountById(bankAccount1.getId()).getBalance());
+        OperationResult operationResult = userService.Withdraw(bankAccount, withdrawAmount);
+
+        assertInstanceOf(OperationResult.OperationError.class, operationResult);
+        assertEquals("Not enough balance", ((OperationResult.OperationError) operationResult).getMessage());
+        verify(bankAccountRepository, times(0)).UpdateBankAccountBalance(any(), anyDouble());
+        verify(operationRepository, times(0)).AddOperation(any());
+
+        assertEquals(100.0, bankAccount.getBalance(), 0.001);
+    }
+
+    @Test
+    void testDeposit() {
+        Double depositAmount = 100.0;
+        Double initialBalance = bankAccount.getBalance();
+
+        when(bankAccountRepository.FindBankAccountById(bankAccount.getId())).thenReturn(bankAccount);
+        when(bankAccountRepository.UpdateBankAccountBalance(bankAccount.getId(), initialBalance + depositAmount))
+                .thenAnswer(invocation -> {
+                    bankAccount.setBalance(initialBalance + depositAmount);
+                    return null;
+                });
+        when(operationRepository.AddOperation(any())).thenReturn(new OperationResult.Success());
+
+        OperationResult operationResult = userService.Deposit(bankAccount, depositAmount);
+
+        assertInstanceOf(OperationResult.Success.class, operationResult);
+        assertEquals(initialBalance + depositAmount, bankAccount.getBalance(), 0.001);
+        verify(bankAccountRepository, times(1)).UpdateBankAccountBalance(bankAccount.getId(), initialBalance + depositAmount);
+        verify(operationRepository, times(1)).AddOperation(any());
+
+        assertEquals(200.0, bankAccount.getBalance(), 0.001);
     }
 }

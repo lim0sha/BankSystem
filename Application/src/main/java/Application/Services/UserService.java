@@ -13,14 +13,16 @@ import Application.Models.Entites.BankAccount;
 import Application.Models.Entites.Operation;
 import Application.Models.Entites.User;
 import Application.Models.Enums.OperationType;
-
-import java.util.Objects;
+import lombok.Getter;
 
 @AllArgsConstructor
 public class UserService implements IUserService {
 
+    @Getter
     private IUserRepository _userRepository;
+    @Getter
     private IBankAccountRepository _bankAccountRepository;
+    @Getter
     private IOperationRepository _operationRepository;
 
     private UserManager _userManager;

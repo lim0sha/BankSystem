@@ -21,10 +21,11 @@ public class Menu implements IMenu {
 
     private final IdGenerator userIdGenerator = new IdGenerator();
     private final IdGenerator bankAccountIdGenerator = new IdGenerator();
-    private final UserRepository userRepository = new UserRepository();
-    private final OperationRepository operationRepository = new OperationRepository();
-    private final BankAccountRepository bankAccountRepository = new BankAccountRepository();
-    private final UserService userService = new UserService(userRepository, bankAccountRepository, operationRepository, new UserManager());
+    private final UserService userService = new UserService(
+            new UserRepository(),
+            new BankAccountRepository(),
+            new OperationRepository(),
+            new UserManager());
 
     private final Scanner scanner = new Scanner(System.in);
 
@@ -127,7 +128,7 @@ public class Menu implements IMenu {
     private void getUserInfo() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
-        User user = userRepository.FindUserById(userId);
+        User user = userService.get_userRepository().FindUserById(userId);
         if (user != null) {
             userService.GetUserInfo(user);
         } else {
@@ -141,8 +142,8 @@ public class Menu implements IMenu {
         System.out.print("Введите ID друга: ");
         int friendId = scanner.nextInt();
 
-        User user = userRepository.FindUserById(userId);
-        User friend = userRepository.FindUserById(friendId);
+        User user = userService.get_userRepository().FindUserById(userId);
+        User friend = userService.get_userRepository().FindUserById(friendId);
 
         if (user != null && friend != null) {
             System.out.print("Добавить друга (1) или удалить (2): ");
@@ -166,7 +167,7 @@ public class Menu implements IMenu {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
 
-        User user = userRepository.FindUserById(userId);
+        User user = userService.get_userRepository().FindUserById(userId);
         if (user == null) {
             System.out.println("Пользователь не найден.");
             return; // 💥 Выход, если пользователь не найден
@@ -188,10 +189,10 @@ public class Menu implements IMenu {
     private void checkBalance() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
-        BankAccount account = bankAccountRepository.FindBankAccountById(accountId);
+        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
 
         if (account != null) {
-            User user = userRepository.FindUserById(account.getUserId()); // ✅ Получаем пользователя из счета
+            User user = userService.get_userRepository().FindUserById(account.getUserId()); // ✅ Получаем пользователя из счета
             if (user != null) {
                 userService.CheckBalance(user, account); // ✅ Передаём пользователя
             } else {
@@ -209,7 +210,7 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму снятия: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = bankAccountRepository.FindBankAccountById(accountId);
+        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
         if (account != null) {
             OperationResult result = userService.Withdraw(account, amount);
 
@@ -229,7 +230,7 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму пополнения: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = bankAccountRepository.FindBankAccountById(accountId);
+        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
         if (account != null) {
             OperationResult result = userService.Deposit(account, amount);
             if (result instanceof OperationResult.Success) {
@@ -254,8 +255,8 @@ public class Menu implements IMenu {
             System.out.print("Введите сумму перевода: ");
             double amount = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
 
-            BankAccount fromAccount = bankAccountRepository.FindBankAccountById(fromId);
-            BankAccount toAccount = bankAccountRepository.FindBankAccountById(toId);
+            BankAccount fromAccount = userService.get_bankAccountRepository().FindBankAccountById(fromId);
+            BankAccount toAccount = userService.get_bankAccountRepository().FindBankAccountById(toId);
 
             if (fromAccount != null && toAccount != null) {
                 OperationResult result = userService.Transfer(fromAccount, toAccount, amount);
