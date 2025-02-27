@@ -7,6 +7,10 @@ import Application.Models.Utils.IdGenerator;
 
 import java.util.ArrayList;
 
+/**
+ * Класс, представляющий пользователя системы.
+ * Хранит информацию о пользователе, включая личные данные, список банковских счетов и друзей.
+ */
 @Getter
 @Setter
 public class User {
@@ -26,6 +30,17 @@ public class User {
 
     private ArrayList<User> friends = new ArrayList<>();
 
+    /**
+     * Конструктор для создания нового пользователя.
+     * Генерирует уникальный идентификатор для пользователя и инициализирует его данные.
+     *
+     * @param idGenerator генератор ID для создания уникального идентификатора пользователя.
+     * @param login логин пользователя.
+     * @param name имя пользователя.
+     * @param age возраст пользователя.
+     * @param sex пол пользователя.
+     * @param hairType цвет волос пользователя.
+     */
     public User(
             IdGenerator idGenerator,
             String login,

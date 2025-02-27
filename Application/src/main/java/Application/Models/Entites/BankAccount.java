@@ -4,6 +4,10 @@ import lombok.Getter;
 import lombok.Setter;
 import Application.Models.Utils.IdGenerator;
 
+/**
+ * Класс, представляющий банковский счет пользователя.
+ * Хранит информацию о счете, балансе и привязанном пользователе.
+ */
 @Getter
 public class BankAccount {
     final private Integer id;
@@ -15,6 +19,13 @@ public class BankAccount {
 
     private final Integer UserId;
 
+    /**
+     * Конструктор для создания нового банковского счета.
+     * Генерирует уникальный идентификатор счета и связывает его с пользователем.
+     *
+     * @param idGenerator генератор ID для создания уникального идентификатора счета.
+     * @param user пользователь, к которому будет привязан новый счет.
+     */
     public BankAccount(IdGenerator idGenerator, User user) {
         this.id = idGenerator.generateBankAccountId();
         this.balance = 0.0;

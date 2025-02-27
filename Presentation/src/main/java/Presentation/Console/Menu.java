@@ -17,6 +17,33 @@ import DataAccess.UserRepository;
 
 import java.util.Scanner;
 
+/**
+ * Класс {@code Menu} представляет консольное меню для управления пользователями и банковскими счетами.
+ * Предоставляет интерфейс для создания пользователей, управления друзьями, работы с банковскими счетами
+ * и выполнения финансовых операций.
+ * <p>
+ * Реализует интерфейс {@link IMenu}.
+ * <p>
+ * Основные возможности:
+ * <ul>
+ *     <li>Создание пользователя</li>
+ *     <li>Просмотр информации о пользователе</li>
+ *     <li>Управление списком друзей пользователя</li>
+ *     <li>Создание банковского счета</li>
+ *     <li>Проверка баланса счета</li>
+ *     <li>Снятие и пополнение средств</li>
+ *     <li>Перевод средств между счетами</li>
+ * </ul>
+ *
+ * Зависимости:
+ * <ul>
+ *     <li>{@link UserService} - основной сервис для работы с пользователями и счетами</li>
+ *     <li>{@link Scanner} - для считывания ввода пользователя</li>
+ * </ul>
+ *
+ * @author lim0sha
+ * @version 1.0
+ */
 public class Menu implements IMenu {
 
     private final IdGenerator userIdGenerator = new IdGenerator();
@@ -29,6 +56,10 @@ public class Menu implements IMenu {
 
     private final Scanner scanner = new Scanner(System.in);
 
+    /**
+     * Запускает основное меню и обрабатывает выбор пользователя.
+     * Предоставляет доступ к основным функциям системы через консольный интерфейс.
+     */
     @Override
     public void Run() {
         while (true) {
@@ -65,6 +96,9 @@ public class Menu implements IMenu {
         }
     }
 
+    /**
+     * Создает нового пользователя с вводом данных через консоль.
+     */
     private void createUser() {
         System.out.print("Введите логин: ");
         String login = scanner.nextLine();
@@ -74,7 +108,7 @@ public class Menu implements IMenu {
         int age = scanner.nextInt();
         scanner.nextLine();
 
-        // Ввод пола через выбор цифрой
+
         System.out.println("Выберите пол:");
         System.out.println("1. Мужской");
         System.out.println("2. Женский");
@@ -89,7 +123,7 @@ public class Menu implements IMenu {
             default -> Sex.Undefined;
         };
 
-        // Ввод цвета волос через выбор цифрой
+
         System.out.println("Выберите цвет волос:");
         System.out.println("1. Блонд");
         System.out.println("2. Пепельный");
@@ -124,7 +158,9 @@ public class Menu implements IMenu {
         System.out.println(result instanceof UserResult.Success ? "Пользователь создан!" : "Ошибка создания пользователя.");
     }
 
-
+    /**
+     * Выводит информацию о пользователе по введенному ID.
+     */
     private void getUserInfo() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
@@ -136,6 +172,9 @@ public class Menu implements IMenu {
         }
     }
 
+    /**
+     * Позволяет добавить или удалить друга из списка друзей пользователя.
+     */
     private void manageFriends() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
@@ -163,6 +202,9 @@ public class Menu implements IMenu {
         }
     }
 
+    /**
+     * Создает банковский счет для существующего пользователя.
+     */
     private void createBankAccount() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
@@ -170,7 +212,7 @@ public class Menu implements IMenu {
         User user = userService.get_userRepository().FindUserById(userId);
         if (user == null) {
             System.out.println("Пользователь не найден.");
-            return; // 💥 Выход, если пользователь не найден
+            return;
         }
 
         System.out.println("Найден пользователь: " + user.getName() + " (ID: " + user.getId() + ")");
@@ -185,16 +227,18 @@ public class Menu implements IMenu {
         }
     }
 
-
+    /**
+     * Проверяет баланс на указанном банковском счете.
+     */
     private void checkBalance() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
         BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
 
         if (account != null) {
-            User user = userService.get_userRepository().FindUserById(account.getUserId()); // ✅ Получаем пользователя из счета
+            User user = userService.get_userRepository().FindUserById(account.getUserId());
             if (user != null) {
-                userService.CheckBalance(user, account); // ✅ Передаём пользователя
+                userService.CheckBalance(user, account);
             } else {
                 System.out.println("Пользователь не найден.");
             }
@@ -203,7 +247,9 @@ public class Menu implements IMenu {
         }
     }
 
-
+    /**
+     * Снимает средства с указанного банковского счета.
+     */
     private void withdraw() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
@@ -224,6 +270,9 @@ public class Menu implements IMenu {
         }
     }
 
+    /**
+     * Пополняет баланс указанного банковского счета.
+     */
     private void deposit() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
@@ -243,7 +292,9 @@ public class Menu implements IMenu {
         }
     }
 
-
+    /**
+     * Переводит средства с одного банковского счета на другой.
+     */
     private void transfer() {
         try {
             System.out.print("Введите ID счета отправителя: ");

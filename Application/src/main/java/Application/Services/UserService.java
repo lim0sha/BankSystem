@@ -15,61 +15,125 @@ import Application.Models.Entites.User;
 import Application.Models.Enums.OperationType;
 import lombok.Getter;
 
+/**
+ * Сервис для управления пользователями, их банковскими счетами и операциями.
+ * Взаимодействует с репозиториями пользователей, банковских счетов и операций.
+ * Обрабатывает запросы, такие как создание/удаление пользователей, переводы, операции с балансом и так далее.
+ */
 @AllArgsConstructor
 public class UserService implements IUserService {
-
+    
     @Getter
     private IUserRepository _userRepository;
+    
     @Getter
     private IBankAccountRepository _bankAccountRepository;
+    
     @Getter
     private IOperationRepository _operationRepository;
-
+    
     private UserManager _userManager;
 
+    /**
+     * Создает нового пользователя.
+     *
+     * @param user объект пользователя, который нужно добавить.
+     * @return result-type добавления пользователя.
+     */
     @Override
     public UserResult CreateUser(User user) {
         return _userRepository.AddUser(user);
     }
 
+    /**
+     * Удаляет существующего пользователя.
+     *
+     * @param user объект пользователя, которого нужно удалить.
+     * @return result-type удаления пользователя.
+     */
     @Override
     public UserResult DeleteUser(User user) {
         return _userRepository.DeleteUser(user.getId());
     }
 
+    /**
+     * Получает информацию о пользователе и выводит ее.
+     *
+     * @param user объект пользователя, информацию о котором нужно вывести.
+     */
     @Override
     public void GetUserInfo(User user) {
         _userManager.GetUserInfo(user);
     }
 
+    /**
+     * Добавляет другого пользователя в список друзей.
+     *
+     * @param user текущий пользователь, добавляющий друга.
+     * @param other пользователь, который будет добавлен в друзья.
+     */
     @Override
     public void AddFriend(User user, User other) {
         _userManager.AddFriend(user, other);
     }
 
+    /**
+     * Удаляет пользователя из списка друзей.
+     *
+     * @param user текущий пользователь, удаляющий друга.
+     * @param other пользователь, которого нужно удалить из друзей.
+     */
     @Override
     public void RemoveFriend(User user, User other) {
         _userManager.RemoveFriend(user, other);
     }
 
+    /**
+     * Добавляет новый банковский счет пользователю.
+     *
+     * @param user пользователь, которому добавляется банковский счет.
+     * @param bankAccount объект банковского счета, который нужно добавить.
+     * @return result-type добавления счета.
+     */
     @Override
     public BankAccountResult addBankAccount(User user, BankAccount bankAccount) {
         _userManager.AddBankAccount(user, bankAccount);
         return _bankAccountRepository.AddBankAccount(bankAccount);
     }
 
+    /**
+     * Удаляет банковский счет у пользователя.
+     *
+     * @param user пользователь, у которого нужно удалить банковский счет.
+     * @param bankAccount объект банковского счета, который нужно удалить.
+     * @return result-type удаления счета.
+     */
     @Override
     public BankAccountResult RemoveBankAccount(User user, BankAccount bankAccount) {
         _userManager.RemoveBankAccount(user, bankAccount);
         return _bankAccountRepository.DeleteBankAccount(bankAccount.getId());
     }
 
+    /**
+     * Проверяет баланс на банковском счете пользователя.
+     *
+     * @param user пользователь, чьи средства нужно проверить.
+     * @param bankAccount объект банковского счета, на котором нужно проверить баланс.
+     * @return result-type операции (успех или ошибка).
+     */
     @Override
     public OperationResult CheckBalance(User user, BankAccount bankAccount) {
         _userManager.CheckBalance(user, bankAccount);
         return _operationRepository.AddOperation(new Operation(bankAccount.getId(), OperationType.CheckBalance, 0.0));
     }
 
+    /**
+     * Пополняет банковский счет на указанную сумму.
+     *
+     * @param bankAccount объект банковского счета, на который нужно пополнить средства.
+     * @param amount сумма пополнения.
+     * @return result-type операции (успех или ошибка).
+     */
     @Override
     public OperationResult Deposit(BankAccount bankAccount, Double amount) {
         var account = _bankAccountRepository.FindBankAccountById(bankAccount.getId());
@@ -77,6 +141,13 @@ public class UserService implements IUserService {
         return _operationRepository.AddOperation(new Operation(bankAccount.getId(), OperationType.Deposit, amount));
     }
 
+    /**
+     * Снимает средства с банковского счета.
+     *
+     * @param bankAccount объект банковского счета, с которого нужно снять деньги.
+     * @param amount сумма снятия.
+     * @return result-type операции (успех или ошибка).
+     */
     @Override
     public OperationResult Withdraw(BankAccount bankAccount, Double amount) {
         var account = _bankAccountRepository.FindBankAccountById(bankAccount.getId());
@@ -87,6 +158,15 @@ public class UserService implements IUserService {
         return new OperationResult.OperationError("Not enough balance");
     }
 
+    /**
+     * Переводит средства между двумя банковскими счетами.
+     * В зависимости от типа отношений между пользователями применяется комиссия.
+     *
+     * @param bankAccount1 первый банковский счет (откуда переводятся деньги).
+     * @param bankAccount2 второй банковский счет (куда переводятся деньги).
+     * @param amount сумма перевода.
+     * @return result-type операции (успех или ошибка).
+     */
     @Override
     public OperationResult Transfer(BankAccount bankAccount1, BankAccount bankAccount2, Double amount) {
         if (amount == null || amount <= 0) {
@@ -133,6 +213,12 @@ public class UserService implements IUserService {
         return new OperationResult.Success();
     }
 
+    /**
+     * Получает историю операций по банковскому счету.
+     *
+     * @param bankAccount объект банковского счета, для которого нужно получить историю операций.
+     * @return result-type с выводом историей операций в консоль.
+     */
     @Override
     public OperationResult GetOperationHistory(BankAccount bankAccount) {
         var account = _bankAccountRepository.FindBankAccountById(bankAccount.getId());
