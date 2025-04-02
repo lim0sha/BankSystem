@@ -21,12 +21,22 @@ public class HibernateUserDAO implements IUserDAO {
         if (user == null) {
             throw new IllegalArgumentException("Пользователь не может быть null");
         }
-        try (Session session = sessionFactory.openSession()) {
-            Transaction tx = session.beginTransaction();
+        Session session = null;
+        Transaction tx = null;
+        try {
+            session = sessionFactory.openSession();
+            tx = session.beginTransaction();
             session.saveOrUpdate(user);
             tx.commit();
         } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
@@ -35,18 +45,30 @@ public class HibernateUserDAO implements IUserDAO {
         if (user == null || user.getId() == null) {
             throw new IllegalArgumentException("Пользователь или его ID не могут быть null");
         }
-        try (Session session = sessionFactory.openSession()) {
-            Transaction tx = session.beginTransaction();
+        Session session = null;
+        Transaction tx = null;
+        try {
+            session = sessionFactory.openSession();
+            tx = session.beginTransaction();
             session.delete(user);
             tx.commit();
         } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
     @Override
     public User FindUserById(int id) {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = null;
+        try {
+            session = sessionFactory.openSession();
             User user = session.get(User.class, id);
             if (user != null) {
                 Hibernate.initialize(user.getBankAccounts());
@@ -56,16 +78,26 @@ public class HibernateUserDAO implements IUserDAO {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
     @Override
     public List<User> FindAllUsers() {
-        try (Session session = sessionFactory.openSession()) {
+        Session session = null;
+        try {
+            session = sessionFactory.openSession();
             return session.createQuery("FROM User", User.class).list();
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 }

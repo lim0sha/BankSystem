@@ -15,6 +15,7 @@ public class HibernateOperationDAO implements IOperationDAO {
     public HibernateOperationDAO(SessionFactory sf) {
         sessionFactory = sf;
     }
+
     @Override
     public Operation GetOperationById(int id) {
         try (Session session = sessionFactory.openSession()) {
@@ -27,23 +28,43 @@ public class HibernateOperationDAO implements IOperationDAO {
 
     @Override
     public void SaveOperation(Operation operation) {
-        try (Session session = sessionFactory.openSession()) {
-            Transaction tx = session.beginTransaction();
+        Session session = null;
+        Transaction tx = null;
+        try {
+            session = sessionFactory.openSession();
+            tx = session.beginTransaction();
             session.saveOrUpdate(operation);
             tx.commit();
         } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
     @Override
     public void DeleteOperation(Operation operation) {
-        try (Session session = sessionFactory.openSession()) {
-            Transaction tx = session.beginTransaction();
+        Session session = null;
+        Transaction tx = null;
+        try {
+            session = sessionFactory.openSession();
+            tx = session.beginTransaction();
             session.delete(operation);
             tx.commit();
         } catch (Exception e) {
+            if (tx != null) {
+                tx.rollback();
+            }
             e.printStackTrace();
+        } finally {
+            if (session != null) {
+                session.close();
+            }
         }
     }
 
@@ -53,7 +74,7 @@ public class HibernateOperationDAO implements IOperationDAO {
             return session.createQuery("FROM Operation", Operation.class).list();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new ArrayList<>();
         }
     }
 
@@ -65,7 +86,7 @@ public class HibernateOperationDAO implements IOperationDAO {
                     .getResultList();
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+            return new ArrayList<>();
         }
     }
 }

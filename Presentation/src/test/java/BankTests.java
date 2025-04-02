@@ -49,7 +49,7 @@ public class BankTests {
 
     @Test
     void testWithdrawWithSufficientBalance() {
-        Double withdrawAmount = 50.0;
+        double withdrawAmount = 50.0;
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());
 
@@ -62,7 +62,7 @@ public class BankTests {
 
     @Test
     void testWithdrawWithInsufficientBalance() {
-        Double withdrawAmount = 150.0;
+        double withdrawAmount = 150.0;
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(false);
 
         OperationResult operationResult = userController.Withdraw(bankAccount, withdrawAmount);
@@ -75,7 +75,7 @@ public class BankTests {
 
     @Test
     void testDeposit() {
-        Double depositAmount = 100.0;
+        double depositAmount = 100.0;
         when(bankAccountService.Deposit(bankAccount.getId(), depositAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());
 
