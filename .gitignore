@@ -25,6 +25,8 @@ bin/
 /dist/
 /nbdist/
 /.nb-gradle/
+DataAccess.iml
+Presentation.iml
 
 ### VS Code ###
 .vscode/

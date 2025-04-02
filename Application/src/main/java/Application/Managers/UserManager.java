@@ -1,18 +1,19 @@
 package Application.Managers;
 
-import Application.Contracts.ResultTypes.OperationResult;
-import Application.Models.Entites.BankAccount;
-import Application.Models.Entites.Operation;
-import Application.Models.Entites.User;
+import Application.ResultTypes.OperationResult;
+import Application.Models.Entities.BankAccount;
+import Application.Models.Entities.Operation;
+import Application.Models.Entities.User;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Класс-менеджер для управления данными пользователей, их банковскими счетами и друзьями.
  * Предоставляет методы для получения информации о пользователе, добавления/удаления друзей,
  * управления банковскими счетами и вывода истории операций.
  */
-public record UserManager() {
+public class UserManager {
 
     /**
      * Выводит информацию о пользователе, включая его данные и банковские счета.
@@ -20,36 +21,42 @@ public record UserManager() {
      * @param user объект пользователя, информацию о котором нужно вывести.
      */
     public void GetUserInfo(User user) {
+
         if (user == null) {
-            System.out.println("User data is not available.");
+            System.out.println("Пользователь с ID " + user.getId() + " не найден.");
             return;
         }
 
-        System.out.println("User Information:");
-        System.out.println("──────────────────────────────────");
-        System.out.printf("ID: %d%n", user.getId());
-        System.out.printf("Login: %s%n", user.getLogin());
-        System.out.printf("Name: %s%n", user.getName());
-        System.out.printf("Age: %d%n", user.getAge());
-        System.out.printf("Sex: %s%n", user.getSex());
-        System.out.printf("Hair Color: %s%n", user.getHairType());
+//        // Инициализация ленивых коллекций
+//        Hibernate.initialize(user.getBankAccounts());
+//        Hibernate.initialize(user.getFriends());
 
-        System.out.println("\nBank Accounts:");
+        System.out.println("ID: " + user.getId());
+        System.out.println("Логин: " + user.getLogin());
+        System.out.println("Имя: " + user.getName());
+        System.out.println("Возраст: " + user.getAge());
+        System.out.println("Пол: " + user.getSex());
+        System.out.println("Цвет волос: " + user.getHairType());
+
+        // Вывод банковских счетов
+        System.out.println("\nБанковские счета:");
         if (user.getBankAccounts().isEmpty()) {
-            System.out.println("No bank accounts available.");
+            System.out.println("Нет привязанных счетов.");
         } else {
-            user.getBankAccounts().forEach(account -> System.out.printf("Account ID: %d%n", account));
+            for (BankAccount account : user.getBankAccounts()) {
+                System.out.println("ID счета: " + account.getId() + ", Баланс: " + account.getBalance());
+            }
         }
 
-        System.out.println("\nFriends:");
+        // Вывод друзей
+        System.out.println("\nДрузья:");
         if (user.getFriends().isEmpty()) {
-            System.out.println("No friends available.");
+            System.out.println("Нет друзей.");
         } else {
-            user.getFriends().forEach(friend ->
-                    System.out.printf("Friend ID: %d | Name: %s%n", friend.getId(), friend.getName()));
+            for (User friend : user.getFriends()) {
+                System.out.println("ID друга: " + friend.getId() + ", Имя: " + friend.getName());
+            }
         }
-
-        System.out.println("──────────────────────────────────\n");
     }
 
     /**
@@ -81,7 +88,7 @@ public record UserManager() {
      * @param bankAccount банковский счет для добавления.
      */
     public void AddBankAccount(User user, BankAccount bankAccount) {
-        user.getBankAccounts().add(bankAccount.getId());
+        user.getBankAccounts().add(bankAccount);
     }
 
     /**
@@ -113,7 +120,7 @@ public record UserManager() {
      * @param operations список операций, связанных с этим счетом.
      * @return результат операции (успех или ошибка).
      */
-    public OperationResult PrintHistory(BankAccount account, ArrayList<Operation> operations) {
+    public OperationResult PrintHistory(BankAccount account, List<Operation> operations) {
         if (operations == null) {
             return new OperationResult.OperationError("Operations can not be null.");
         } else {

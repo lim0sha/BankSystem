@@ -1,4 +1,4 @@
-package Application.Contracts.ResultTypes;
+package Application.ResultTypes;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,19 +1,26 @@
 package Presentation.Console;
 
-import Application.Contracts.ResultTypes.BankAccountResult;
-import Application.Contracts.ResultTypes.OperationResult;
-import Application.Contracts.ResultTypes.UserResult;
+import Application.Models.Entities.Operation;
+import Application.ResultTypes.BankAccountResult;
+import Application.ResultTypes.OperationResult;
+import Application.ResultTypes.UserResult;
 import Application.Managers.UserManager;
-import Application.Models.Entites.BankAccount;
-import Application.Models.Entites.User;
+import Application.Models.Entities.BankAccount;
+import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
-import Application.Models.Utils.IdGenerator;
-import Application.Services.UserService;
+import DAO.HibernateBankAccountDAO;
+import DAO.HibernateOperationDAO;
+import DAO.HibernateUserDAO;
+import Presentation.Controllers.UserController;
+import Services.BankAccountService;
+import Services.OperationService;
+import Services.UserService;
 import Presentation.Interfaces.IMenu;
-import DataAccess.BankAccountRepository;
-import DataAccess.OperationRepository;
-import DataAccess.UserRepository;
+import Utils.HibernateSessionFactoryUtil;
+import org.hibernate.Hibernate;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
 
 import java.util.Scanner;
 
@@ -46,13 +53,13 @@ import java.util.Scanner;
  */
 public class Menu implements IMenu {
 
-    private final IdGenerator userIdGenerator = new IdGenerator();
-    private final IdGenerator bankAccountIdGenerator = new IdGenerator();
-    private final UserService userService = new UserService(
-            new UserRepository(),
-            new BankAccountRepository(),
-            new OperationRepository(),
-            new UserManager());
+    private final SessionFactory sf = HibernateSessionFactoryUtil.GetSessionFactory();
+    private final UserController controller = new UserController(
+            new UserManager(), new UserService(new HibernateUserDAO(sf)),
+            new BankAccountService(new HibernateBankAccountDAO(sf)),
+            new OperationService(new HibernateOperationDAO(sf))
+    );
+
 
     private final Scanner scanner = new Scanner(System.in);
 
@@ -101,28 +108,49 @@ public class Menu implements IMenu {
      */
     private void createUser() {
         System.out.print("Введите логин: ");
-        String login = scanner.nextLine();
-        System.out.print("Введите имя: ");
-        String name = scanner.nextLine();
-        System.out.print("Введите возраст: ");
-        int age = scanner.nextInt();
-        scanner.nextLine();
+        String login = scanner.nextLine().trim();
+        if (login.isEmpty()) {
+            System.out.println("Логин не может быть пустым!");
+            return;
+        }
 
+        System.out.print("Введите имя: ");
+        String name = scanner.nextLine().trim();
+        if (name.isEmpty()) {
+            System.out.println("Имя не может быть пустым!");
+            return;
+        }
+
+        System.out.print("Введите возраст: ");
+        int age;
+        try {
+            age = Integer.parseInt(scanner.nextLine().trim());
+            if (age <= 0) {
+                System.out.println("Возраст должен быть положительным числом!");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("Неверный формат возраста. Введите число.");
+            return;
+        }
 
         System.out.println("Выберите пол:");
         System.out.println("1. Мужской");
         System.out.println("2. Женский");
         System.out.println("3. Неопределённый");
         System.out.print("Введите цифру (1-3): ");
-        int sexChoice = scanner.nextInt();
-        scanner.nextLine();
-
-        Sex sex = switch (sexChoice) {
-            case 1 -> Sex.Male;
-            case 2 -> Sex.Female;
-            default -> Sex.Undefined;
-        };
-
+        Sex sex;
+        try {
+            int sexChoice = Integer.parseInt(scanner.nextLine().trim());
+            sex = switch (sexChoice) {
+                case 1 -> Sex.Male;
+                case 2 -> Sex.Female;
+                default -> Sex.Undefined;
+            };
+        } catch (NumberFormatException e) {
+            System.out.println("Неверный выбор пола. Введите число от 1 до 3.");
+            return;
+        }
 
         System.out.println("Выберите цвет волос:");
         System.out.println("1. Блонд");
@@ -136,26 +164,36 @@ public class Menu implements IMenu {
         System.out.println("9. Белый");
         System.out.println("10. Лысый");
         System.out.print("Введите цифру (1-10): ");
-        int hairChoice = scanner.nextInt();
-        scanner.nextLine();
+        HairColor hairColor;
+        try {
+            int hairChoice = Integer.parseInt(scanner.nextLine().trim());
+            hairColor = switch (hairChoice) {
+                case 1 -> HairColor.Blond;
+                case 2 -> HairColor.Ash;
+                case 3 -> HairColor.Brown;
+                case 4 -> HairColor.Auburn;
+                case 5 -> HairColor.Black;
+                case 6 -> HairColor.Dyed;
+                case 7 -> HairColor.Colored;
+                case 8 -> HairColor.Grey;
+                case 9 -> HairColor.White;
+                default -> HairColor.Bold;
+            };
+        } catch (NumberFormatException e) {
+            System.out.println("Неверный выбор цвета волос. Введите число от 1 до 10.");
+            return;
+        }
 
-        HairColor hairColor = switch (hairChoice) {
-            case 1 -> HairColor.Blond;
-            case 2 -> HairColor.Ash;
-            case 3 -> HairColor.Brown;
-            case 4 -> HairColor.Auburn;
-            case 5 -> HairColor.Black;
-            case 6 -> HairColor.Dyed;
-            case 7 -> HairColor.Colored;
-            case 8 -> HairColor.Grey;
-            case 9 -> HairColor.White;
-            default -> HairColor.Bold;
-        };
+        // Создаем пользователя без использования IdGenerator, так как ID генерируется базой данных
+        User user = new User(login, name, age, sex, hairColor);
 
-        User user = new User(userIdGenerator, login, name, age, sex, hairColor);
-        UserResult result = userService.CreateUser(user);
-
-        System.out.println(result instanceof UserResult.Success ? "Пользователь создан!" : "Ошибка создания пользователя.");
+        // Вызываем метод создания пользователя через контроллер
+        UserResult result = controller.CreateUser(user);
+        if (result instanceof UserResult.Success) {
+            System.out.println("Пользователь создан!");
+        } else {
+            System.out.println("Ошибка создания пользователя.");
+        }
     }
 
     /**
@@ -164,12 +202,7 @@ public class Menu implements IMenu {
     private void getUserInfo() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
-        User user = userService.get_userRepository().FindUserById(userId);
-        if (user != null) {
-            userService.GetUserInfo(user);
-        } else {
-            System.out.println("Пользователь не найден.");
-        }
+        controller.GetUserInfo(userId);
     }
 
     /**
@@ -180,19 +213,15 @@ public class Menu implements IMenu {
         int userId = scanner.nextInt();
         System.out.print("Введите ID друга: ");
         int friendId = scanner.nextInt();
-
-        User user = userService.get_userRepository().FindUserById(userId);
-        User friend = userService.get_userRepository().FindUserById(friendId);
-
-        if (user != null && friend != null) {
+        if (userId > 0 && friendId > 0) {
             System.out.print("Добавить друга (1) или удалить (2): ");
             int action = scanner.nextInt();
 
             if (action == 1) {
-                userService.AddFriend(user, friend);
+                controller.AddFriend(userId, friendId);
                 System.out.println("Друг добавлен.");
             } else if (action == 2) {
-                userService.RemoveFriend(user, friend);
+                controller.RemoveFriend(userId, friendId);
                 System.out.println("Друг удален.");
             } else {
                 System.out.println("Неверная команда.");
@@ -208,18 +237,14 @@ public class Menu implements IMenu {
     private void createBankAccount() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
-
-        User user = userService.get_userRepository().FindUserById(userId);
+        User user = controller.GetUserById(userId);
         if (user == null) {
-            System.out.println("Пользователь не найден.");
+            System.out.println("Пользователь с ID " + userId + " не найден.");
             return;
         }
 
-        System.out.println("Найден пользователь: " + user.getName() + " (ID: " + user.getId() + ")");
-
-        BankAccount account = new BankAccount(bankAccountIdGenerator, user);
-        BankAccountResult result = userService.addBankAccount(user, account);
-
+        BankAccount account = new BankAccount(user);
+        BankAccountResult result = controller.addBankAccount(userId, account);
         if (result instanceof BankAccountResult.Success) {
             System.out.println("Счет создан!");
         } else {
@@ -233,18 +258,14 @@ public class Menu implements IMenu {
     private void checkBalance() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
-        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
+        BankAccount account = controller.GetBankAccountById(accountId);
 
-        if (account != null) {
-            User user = userService.get_userRepository().FindUserById(account.getUserId());
-            if (user != null) {
-                userService.CheckBalance(user, account);
-            } else {
-                System.out.println("Пользователь не найден.");
-            }
-        } else {
+        if (account == null) {
             System.out.println("Счет не найден.");
+            return;
         }
+
+        controller.CheckBalance(account.getUser().getId(), accountId);
     }
 
     /**
@@ -256,9 +277,9 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму снятия: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
+        BankAccount account = controller.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = userService.Withdraw(account, amount);
+            OperationResult result = controller.Withdraw(account, amount);
 
             if (result instanceof OperationResult.Success) {
                 System.out.println("Деньги сняты.");
@@ -279,9 +300,9 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму пополнения: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = userService.get_bankAccountRepository().FindBankAccountById(accountId);
+        BankAccount account = controller.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = userService.Deposit(account, amount);
+            OperationResult result = controller.Deposit(account, amount);
             if (result instanceof OperationResult.Success) {
                 System.out.println("Счет пополнен.");
             } else if (result instanceof OperationResult.OperationError error) {
@@ -306,11 +327,11 @@ public class Menu implements IMenu {
             System.out.print("Введите сумму перевода: ");
             double amount = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
 
-            BankAccount fromAccount = userService.get_bankAccountRepository().FindBankAccountById(fromId);
-            BankAccount toAccount = userService.get_bankAccountRepository().FindBankAccountById(toId);
+            BankAccount fromAccount = controller.GetBankAccountById(fromId);
+            BankAccount toAccount = controller.GetBankAccountById(toId);
 
             if (fromAccount != null && toAccount != null) {
-                OperationResult result = userService.Transfer(fromAccount, toAccount, amount);
+                OperationResult result = controller.Transfer(fromAccount, toAccount, amount);
                 if (result instanceof OperationResult.Success) {
                     System.out.println("Перевод выполнен.");
                 } else if (result instanceof OperationResult.OperationError error) {
