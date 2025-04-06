@@ -12,9 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import java.util.Scanner;
 
 @Configuration
-@ComponentScan(basePackages = "Presentation")
-@ComponentScan(basePackages = "DataAccess")
-@ComponentScan(basePackages = "Application")
+@ComponentScan(basePackages = { "Presentation", "DataAccess", "Application" })
 public class AppConfig {
 
     @Bean

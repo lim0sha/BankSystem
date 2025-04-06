@@ -28,6 +28,7 @@ bin/
 DataAccess.iml
 Presentation.iml
 Application.iml
+target
 
 ### VS Code ###
 .vscode/

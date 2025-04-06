@@ -10,6 +10,8 @@ public interface IUserController {
 
     UserResult CreateUser(User user);
 
+    UserResult UpdateUser(User user);
+
     User GetUserById(int id);
 
     BankAccount GetBankAccountById(int id);
@@ -35,4 +37,6 @@ public interface IUserController {
     OperationResult Transfer(BankAccount bankAccount1, BankAccount bankAccount2, Double amount);
 
     OperationResult GetOperationHistory(int bankAccountId);
+
+    UserResult DeleteUserById(int id);
 }

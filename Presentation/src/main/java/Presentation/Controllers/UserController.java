@@ -14,12 +14,10 @@ import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Controller;
 
 import java.util.List;
 
 @Component
-@Controller
 public class UserController implements IUserController {
 
     private final UserManager userManager;
@@ -42,6 +40,16 @@ public class UserController implements IUserController {
         }
         userService.SaveUser(user);
         return new UserResult.Success();
+    }
+
+    @Override
+    public UserResult UpdateUser(User user) {
+        try {
+            userService.SaveUser(user);
+            return new UserResult.Success();
+        } catch (Exception e) {
+            return new UserResult.UserUpdateError(e.getMessage());
+        }
     }
 
     @Override
@@ -193,4 +201,20 @@ public class UserController implements IUserController {
             return new OperationResult.OperationError(e.getMessage());
         }
     }
+
+    @Override
+    public UserResult DeleteUserById(int id) {
+        try {
+            User user = userService.GetUser(id);
+            if (user == null) {
+                return new UserResult.UserDeletionError("Пользователь с данным ID не найден.");
+            }
+
+            userService.DeleteUser(user);
+            return new UserResult.Success();
+        } catch (Exception e) {
+            return new UserResult.UserDeletionError("Ошибка при удалении пользователя: " + e.getMessage());
+        }
+    }
+
 }
