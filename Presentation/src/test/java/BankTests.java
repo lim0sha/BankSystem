@@ -5,9 +5,9 @@ import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
 import Presentation.Controllers.UserController;
-import Services.BankAccountService;
-import Services.OperationService;
-import Services.UserService;
+import DataAccess.Services.BankAccountService;
+import DataAccess.Services.OperationService;
+import DataAccess.Services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -24,7 +24,7 @@ public class BankTests {
     private UserManager userManager;
 
     @Mock
-    private UserService userService;
+    private UserService UserService;
 
     @Mock
     private BankAccountService bankAccountService;

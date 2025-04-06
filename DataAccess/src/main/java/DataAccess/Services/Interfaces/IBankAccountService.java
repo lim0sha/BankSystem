@@ -1,6 +1,7 @@
-package Services.Interfaces;
+package DataAccess.Services.Interfaces;
 
 import Application.Models.Entities.BankAccount;
+import org.springframework.stereotype.Service;
 
 public interface IBankAccountService {
     BankAccount GetAccount(int id);

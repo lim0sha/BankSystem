@@ -4,37 +4,26 @@ import jakarta.persistence.*;
 import lombok.*;
 import Application.Models.Enums.OperationType;
 
-/**
- * Класс, представляющий операцию с банковским счетом.
- * Хранит информацию о типе операции, сумме и счете, на котором она была проведена.
- */
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "Operations")
+@Table(name = "operations")
 public class Operation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "accountId", nullable = false)
+    @JoinColumn(name = "account_id", nullable = false)
     private BankAccount bankAccount;
 
-    @Column(nullable = false)
+    @Column(name = "amount", nullable = false)
     private Double amount;
 
-    @Column(nullable = false)
+    @Column(name = "type", nullable = false)
     private String type;
 
-    /**
-     * Конструктор для создания новой операции.
-     *
-     * @param bankAccount банковский счет, на котором выполнена операция.
-     * @param type тип операции (например, депозит или снятие).
-     * @param amount сумма, участвующая в операции.
-     */
     public Operation(BankAccount bankAccount, OperationType type, Double amount) {
         this.bankAccount = bankAccount;
         this.type = type.toString();

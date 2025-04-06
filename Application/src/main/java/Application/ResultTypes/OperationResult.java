@@ -4,10 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Абстрактный класс, представляющий result-type операции с деньгами.
- * Включает два типа результатов: успешное выполнение операции и ошибка при выполнении.
- */
 public abstract sealed class OperationResult permits OperationResult.Success, OperationResult.OperationError {
 
     @NoArgsConstructor
