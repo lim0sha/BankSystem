@@ -1,11 +1,12 @@
 package Presentation.Configs;
 
-import Application.Managers.UserManager;
+import Application.Managers.IUserManager;
 import Presentation.Console.Menu;
-import Presentation.Controllers.UserController;
+import Presentation.Controllers.*;
 import DataAccess.Services.Interfaces.IBankAccountService;
 import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
+import Presentation.Interfaces.IUserController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -22,7 +23,7 @@ public class AppConfig {
 
     @Bean
     public UserController userController(
-            UserManager userManager,
+            IUserManager userManager,
             IUserService userService,
             IBankAccountService bankAccountService,
             IOperationService operationService) {
@@ -30,7 +31,7 @@ public class AppConfig {
     }
 
     @Bean
-    public Menu menu(UserController userController, Scanner scanner) {
+    public Menu menu(IUserController userController, Scanner scanner) {
         return new Menu(userController, scanner);
     }
 }

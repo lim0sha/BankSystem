@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -80,5 +81,10 @@ public class BankAccountService implements IBankAccountService {
             }
         }
         return false;
+    }
+
+    @Override
+    public List<BankAccount> GetAllAccounts() {
+        return this.BankAccountRepository.findAll();
     }
 }

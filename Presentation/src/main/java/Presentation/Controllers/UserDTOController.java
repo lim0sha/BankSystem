@@ -3,6 +3,7 @@ package Presentation.Controllers;
 import Application.Models.Entities.User;
 import Application.ResultTypes.UserResult;
 import Presentation.DTO.UserDTO;
+import Presentation.Interfaces.IUserController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -18,9 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserDTOController {
 
-    private final UserController userController;
+    private final IUserController userController;
 
-    public UserDTOController(UserController userController) {
+    @Autowired
+    public UserDTOController(IUserController userController) {
         this.userController = userController;
     }
 

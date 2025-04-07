@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class UserManager {
+public class UserManager implements IUserManager {
 
     public void GetUserInfo(User user) {
 

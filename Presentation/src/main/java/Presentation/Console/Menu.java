@@ -7,7 +7,6 @@ import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
-import Presentation.Controllers.UserController;
 import Presentation.Interfaces.IMenu;
 import Presentation.Interfaces.IUserController;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +23,7 @@ public class Menu implements IMenu {
     private final Scanner scanner;
 
     @Autowired
-    public Menu(UserController controller, Scanner scanner) {
+    public Menu(IUserController controller, Scanner scanner) {
         this.controller = controller;
         this.scanner = scanner;
     }

@@ -33,7 +33,7 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public List<User> getAllUsers() {
+    public List<User> GetAllUsers() {
         return UserRepository.findAll();
     }
 }

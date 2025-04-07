@@ -1,10 +1,16 @@
 package Presentation.Interfaces;
 
+import Application.Models.Entities.Operation;
+import Application.Models.Enums.HairColor;
+import Application.Models.Enums.OperationType;
+import Application.Models.Enums.Sex;
 import Application.ResultTypes.BankAccountResult;
 import Application.ResultTypes.OperationResult;
 import Application.ResultTypes.UserResult;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
+
+import java.util.List;
 
 public interface IUserController {
 
@@ -13,6 +19,16 @@ public interface IUserController {
     UserResult UpdateUser(User user);
 
     User GetUserById(int id);
+
+    List<User> GetAllUsersFiltered(Sex sex, HairColor color);
+
+    List<User> GetFriends(int userId);
+
+    List<BankAccount> GetUserBankAccounts(int userId);
+
+    List<BankAccount> GetAllAccounts();
+
+    List<Operation> GetFilteredOperations(OperationType type, Integer accountId);
 
     BankAccount GetBankAccountById(int id);
 

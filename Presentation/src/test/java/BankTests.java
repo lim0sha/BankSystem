@@ -1,30 +1,25 @@
-import Application.Managers.UserManager;
 import Application.ResultTypes.OperationResult;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
-import Presentation.Controllers.UserController;
 import DataAccess.Services.BankAccountService;
 import DataAccess.Services.OperationService;
-import DataAccess.Services.UserService;
+import Presentation.Controllers.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class BankTests {
-
-    @Mock
-    private UserManager userManager;
-
-    @Mock
-    private UserService UserService;
 
     @Mock
     private BankAccountService bankAccountService;
@@ -48,7 +43,7 @@ public class BankTests {
     }
 
     @Test
-    void testWithdrawWithSufficientBalance() {
+    public void testWithdrawWithSufficientBalance() {
         double withdrawAmount = 50.0;
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());
@@ -61,7 +56,7 @@ public class BankTests {
     }
 
     @Test
-    void testWithdrawWithInsufficientBalance() {
+    public void testWithdrawWithInsufficientBalance() {
         double withdrawAmount = 150.0;
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(false);
 
@@ -70,11 +65,11 @@ public class BankTests {
         assertInstanceOf(OperationResult.OperationError.class, operationResult);
         assertEquals("Not enough balance.", ((OperationResult.OperationError) operationResult).getMessage());
         verify(bankAccountService, times(1)).Withdraw(bankAccount.getId(), withdrawAmount);
-        verify(operationService, times(0)).SaveOperation(any()); // SaveOperation не должен вызываться
+        verify(operationService, times(0)).SaveOperation(any());
     }
 
     @Test
-    void testDeposit() {
+    public void testDeposit() {
         double depositAmount = 100.0;
         when(bankAccountService.Deposit(bankAccount.getId(), depositAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());

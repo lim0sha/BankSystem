@@ -36,4 +36,9 @@ public class OperationService implements IOperationService {
     public List<Operation> FindAllOperationsByAccountId(int id) {
         return OperationRepository.findAllByBankAccount_Id(id);
     }
+
+    @Override
+    public List<Operation> FindAllOperations() {
+        return OperationRepository.findAll();
+    }
 }

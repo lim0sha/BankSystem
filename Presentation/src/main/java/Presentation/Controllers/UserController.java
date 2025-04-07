@@ -1,10 +1,12 @@
 package Presentation.Controllers;
 
-import Application.Managers.UserManager;
+import Application.Managers.IUserManager;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.Operation;
 import Application.Models.Entities.User;
+import Application.Models.Enums.HairColor;
 import Application.Models.Enums.OperationType;
+import Application.Models.Enums.Sex;
 import Application.ResultTypes.BankAccountResult;
 import Application.ResultTypes.OperationResult;
 import Application.ResultTypes.UserResult;
@@ -20,13 +22,13 @@ import java.util.List;
 @Component
 public class UserController implements IUserController {
 
-    private final UserManager userManager;
+    private final IUserManager userManager;
     private final IUserService userService;
     private final IBankAccountService bankAccountService;
     private final IOperationService operationService;
 
     @Autowired
-    public UserController(UserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService) {
+    public UserController(IUserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService) {
         this.userManager = userManager;
         this.userService = userService;
         this.bankAccountService = bankAccountService;
@@ -60,6 +62,58 @@ public class UserController implements IUserController {
             return null;
         }
     }
+
+    @Override
+    public List<User> GetAllUsersFiltered(Sex sex, HairColor color) {
+        List<User> users = userService.GetAllUsers();
+        return users.stream()
+                .filter(u -> (sex == null || u.getSex() == sex))
+                .filter(u -> (color == null || u.getHairType() == color))
+                .toList();
+    }
+
+    @Override
+    public List<User> GetFriends(int userId) {
+        User user = userService.GetUser(userId);
+        if (user != null) {
+            return user.getFriends();
+        }
+        return List.of();
+    }
+
+    @Override
+    public List<BankAccount> GetUserBankAccounts(int userId) {
+        User user = userService.GetUser(userId);
+        if (user != null) {
+            return user.getBankAccounts();
+        }
+        return List.of();
+    }
+
+    @Override
+    public List<BankAccount> GetAllAccounts() {
+        return bankAccountService.GetAllAccounts();
+    }
+
+    @Override
+    public List<Operation> GetFilteredOperations(OperationType type, Integer accountId) {
+        List<Operation> operations;
+
+        if (accountId != null) {
+            operations = operationService.FindAllOperationsByAccountId(accountId);
+        } else {
+            operations = operationService.FindAllOperations();
+        }
+
+        if (type != null) {
+            operations = operations.stream()
+                    .filter(o -> o.getType().equalsIgnoreCase(type.toString()))
+                    .toList();
+        }
+
+        return operations;
+    }
+
 
     @Override
     public BankAccount GetBankAccountById(int id) {
@@ -142,7 +196,10 @@ public class UserController implements IUserController {
     @Override
     public OperationResult Deposit(BankAccount bankAccount, Double amount) {
         try {
-            bankAccountService.Deposit(bankAccount.getId(), amount);
+            boolean success = bankAccountService.Deposit(bankAccount.getId(), amount);
+            if (!success) {
+                return new OperationResult.OperationError("Deposit failed.");
+            }
             operationService.SaveOperation(new Operation(bankAccount, OperationType.Deposit, amount));
             return new OperationResult.Success();
         } catch (Exception e) {
@@ -216,5 +273,4 @@ public class UserController implements IUserController {
             return new UserResult.UserDeletionError("Ошибка при удалении пользователя: " + e.getMessage());
         }
     }
-
 }
