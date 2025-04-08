@@ -1,17 +1,19 @@
+import Application.Managers.UserManager;
 import Application.ResultTypes.OperationResult;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
 import DataAccess.Services.BankAccountService;
+import DataAccess.Services.Interfaces.IUserService;
 import DataAccess.Services.OperationService;
 import Presentation.Controllers.*;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,20 +29,26 @@ public class BankTests {
     @Mock
     private OperationService operationService;
 
+    @Mock
+    private UserManager userManager;
+
+    @Mock
+    private IUserService userService;
+
     @InjectMocks
     private UserController userController;
 
-    private BankAccount bankAccount;
-    private User user;
+    private static BankAccount bankAccount;
+    private static User user;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.initMocks(this);
+    @BeforeAll
+    static void init() {
         user = new User("lim0sha", "Sasha", 22, Sex.Male, HairColor.Brown);
         bankAccount = new BankAccount(user);
         bankAccount.setId(1);
         bankAccount.setBalance(100.0);
     }
+
 
     @Test
     public void testWithdrawWithSufficientBalance() {
