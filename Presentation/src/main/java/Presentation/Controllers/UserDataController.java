@@ -8,7 +8,7 @@ import Application.Models.Enums.Sex;
 import Presentation.DTO.BankAccountDTO;
 import Presentation.DTO.OperationDTO;
 import Presentation.DTO.UserDTO;
-import Presentation.Interfaces.IUserController;
+import Presentation.Interfaces.IBaseController;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,11 +25,11 @@ import java.util.List;
 @RequestMapping("/data")
 public class UserDataController {
 
-    private final IUserController userController;
+    private final IBaseController baseController;
 
     @Autowired
-    public UserDataController(IUserController userController) {
-        this.userController = userController;
+    public UserDataController(IBaseController baseController) {
+        this.baseController = baseController;
     }
 
     @Operation(summary = "Получить всех пользователей с фильтрами", description = "Возвращает список пользователей, отфильтрованных по полу и цвету волос")
@@ -42,7 +42,7 @@ public class UserDataController {
             @Parameter(description = "Пол пользователя") @RequestParam(required = false) Sex sex,
             @Parameter(description = "Цвет волос пользователя") @RequestParam(required = false) HairColor hairColor
     ) {
-        List<User> users = userController.GetAllUsersFiltered(sex, hairColor);
+        List<User> users = baseController.GetAllUsersFiltered(sex, hairColor);
         List<UserDTO> dtos = users.stream().map(UserDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -55,7 +55,7 @@ public class UserDataController {
     })
     @GetMapping("/users/{id}/friends")
     public ResponseEntity<List<UserDTO>> getFriends(@Parameter(description = "ID пользователя") @PathVariable int id) {
-        List<User> friends = userController.GetFriends(id);
+        List<User> friends = baseController.GetFriends(id);
         List<UserDTO> dtos = friends.stream().map(UserDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -68,7 +68,7 @@ public class UserDataController {
     })
     @GetMapping("/users/{id}/accounts")
     public ResponseEntity<List<BankAccountDTO>> getAccountsByUser(@Parameter(description = "ID пользователя") @PathVariable int id) {
-        List<BankAccount> accounts = userController.GetUserBankAccounts(id);
+        List<BankAccount> accounts = baseController.GetUserBankAccounts(id);
         List<BankAccountDTO> dtos = accounts.stream().map(BankAccountDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -80,7 +80,7 @@ public class UserDataController {
     })
     @GetMapping("/accounts")
     public ResponseEntity<List<BankAccountDTO>> getAllAccounts() {
-        List<BankAccount> accounts = userController.GetAllAccounts();
+        List<BankAccount> accounts = baseController.GetAllAccounts();
         List<BankAccountDTO> dtos = accounts.stream().map(BankAccountDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }
@@ -95,7 +95,7 @@ public class UserDataController {
             @Parameter(description = "Тип операции (Deposit, Withdraw, Transfer)") @RequestParam(required = false) OperationType type,
             @Parameter(description = "ID банковского счета") @RequestParam(required = false) Integer accountId
     ) {
-        List<Application.Models.Entities.Operation> txs = userController.GetFilteredOperations(type, accountId);
+        List<Application.Models.Entities.Operation> txs = baseController.GetFilteredOperations(type, accountId);
         List<OperationDTO> dtos = txs.stream().map(OperationDTO::new).toList();
         return ResponseEntity.ok(dtos);
     }

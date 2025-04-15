@@ -9,7 +9,6 @@ import DataAccess.Services.Interfaces.IUserService;
 import DataAccess.Services.OperationService;
 import Presentation.Controllers.*;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,7 +35,7 @@ public class BankTests {
     private IUserService userService;
 
     @InjectMocks
-    private UserController userController;
+    private BaseController baseController;
 
     private static BankAccount bankAccount;
     private static User user;
@@ -56,7 +55,7 @@ public class BankTests {
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());
 
-        OperationResult operationResult = userController.Withdraw(bankAccount, withdrawAmount);
+        OperationResult operationResult = baseController.Withdraw(bankAccount, withdrawAmount);
 
         assertInstanceOf(OperationResult.Success.class, operationResult);
         verify(bankAccountService, times(1)).Withdraw(bankAccount.getId(), withdrawAmount);
@@ -68,7 +67,7 @@ public class BankTests {
         double withdrawAmount = 150.0;
         when(bankAccountService.Withdraw(bankAccount.getId(), withdrawAmount)).thenReturn(false);
 
-        OperationResult operationResult = userController.Withdraw(bankAccount, withdrawAmount);
+        OperationResult operationResult = baseController.Withdraw(bankAccount, withdrawAmount);
 
         assertInstanceOf(OperationResult.OperationError.class, operationResult);
         assertEquals("Not enough balance.", ((OperationResult.OperationError) operationResult).getMessage());
@@ -82,7 +81,7 @@ public class BankTests {
         when(bankAccountService.Deposit(bankAccount.getId(), depositAmount)).thenReturn(true);
         doNothing().when(operationService).SaveOperation(any());
 
-        OperationResult operationResult = userController.Deposit(bankAccount, depositAmount);
+        OperationResult operationResult = baseController.Deposit(bankAccount, depositAmount);
 
         assertInstanceOf(OperationResult.Success.class, operationResult);
         verify(bankAccountService, times(1)).Deposit(bankAccount.getId(), depositAmount);

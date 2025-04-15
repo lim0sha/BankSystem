@@ -8,7 +8,7 @@ import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
 import Presentation.Interfaces.IMenu;
-import Presentation.Interfaces.IUserController;
+import Presentation.Interfaces.IBaseController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
@@ -19,12 +19,12 @@ import java.util.Scanner;
 @ComponentScan(basePackages = "Presentation")
 public class Menu implements IMenu {
 
-    private final IUserController controller;
+    private final IBaseController baseController;
     private final Scanner scanner;
 
     @Autowired
-    public Menu(IUserController controller, Scanner scanner) {
-        this.controller = controller;
+    public Menu(IBaseController baseController, Scanner scanner) {
+        this.baseController = baseController;
         this.scanner = scanner;
     }
 
@@ -48,13 +48,11 @@ public class Menu implements IMenu {
 
             switch (choice) {
                 case 1 -> createUser();
-                case 2 -> getUserInfo();
-                case 3 -> manageFriends();
-                case 4 -> createBankAccount();
-                case 5 -> checkBalance();
-                case 6 -> withdraw();
-                case 7 -> deposit();
-                case 8 -> transfer();
+                case 2 -> manageFriends();
+                case 3 -> createBankAccount();
+                case 4 -> withdraw();
+                case 5 -> deposit();
+                case 6 -> transfer();
                 case 0 -> {
                     System.out.println("Выход...");
                     return;
@@ -144,18 +142,12 @@ public class Menu implements IMenu {
 
         User user = new User(login, name, age, sex, hairColor);
 
-        UserResult result = controller.CreateUser(user);
+        UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
             System.out.println("Пользователь создан!");
         } else {
             System.out.println("Ошибка создания пользователя.");
         }
-    }
-
-    private void getUserInfo() {
-        System.out.print("Введите ID пользователя: ");
-        int userId = scanner.nextInt();
-        controller.GetUserInfo(userId);
     }
 
     private void manageFriends() {
@@ -168,10 +160,10 @@ public class Menu implements IMenu {
             int action = scanner.nextInt();
 
             if (action == 1) {
-                controller.AddFriend(userId, friendId);
+                baseController.AddFriend(userId, friendId);
                 System.out.println("Друг добавлен.");
             } else if (action == 2) {
-                controller.RemoveFriend(userId, friendId);
+                baseController.RemoveFriend(userId, friendId);
                 System.out.println("Друг удален.");
             } else {
                 System.out.println("Неверная команда.");
@@ -184,32 +176,19 @@ public class Menu implements IMenu {
     private void createBankAccount() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
-        User user = controller.GetUserById(userId);
+        User user = baseController.GetUserById(userId);
         if (user == null) {
             System.out.println("Пользователь с ID " + userId + " не найден.");
             return;
         }
 
         BankAccount account = new BankAccount(user);
-        BankAccountResult result = controller.addBankAccount(userId, account);
+        BankAccountResult result = baseController.AddBankAccount(userId, account);
         if (result instanceof BankAccountResult.Success) {
             System.out.println("Счет создан!");
         } else {
             System.out.println("Ошибка создания счета.");
         }
-    }
-
-    private void checkBalance() {
-        System.out.print("Введите ID счета: ");
-        int accountId = scanner.nextInt();
-        BankAccount account = controller.GetBankAccountById(accountId);
-
-        if (account == null) {
-            System.out.println("Счет не найден.");
-            return;
-        }
-
-        controller.CheckBalance(account.getUser().getId(), accountId);
     }
 
     private void withdraw() {
@@ -218,9 +197,9 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму снятия: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = controller.GetBankAccountById(accountId);
+        BankAccount account = baseController.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = controller.Withdraw(account, amount);
+            OperationResult result = baseController.Withdraw(account, amount);
 
             if (result instanceof OperationResult.Success) {
                 System.out.println("Деньги сняты.");
@@ -238,9 +217,9 @@ public class Menu implements IMenu {
         System.out.print("Введите сумму пополнения: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = controller.GetBankAccountById(accountId);
+        BankAccount account = baseController.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = controller.Deposit(account, amount);
+            OperationResult result = baseController.Deposit(account, amount);
             if (result instanceof OperationResult.Success) {
                 System.out.println("Счет пополнен.");
             } else if (result instanceof OperationResult.OperationError error) {
@@ -262,11 +241,11 @@ public class Menu implements IMenu {
             System.out.print("Введите сумму перевода: ");
             double amount = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
 
-            BankAccount fromAccount = controller.GetBankAccountById(fromId);
-            BankAccount toAccount = controller.GetBankAccountById(toId);
+            BankAccount fromAccount = baseController.GetBankAccountById(fromId);
+            BankAccount toAccount = baseController.GetBankAccountById(toId);
 
             if (fromAccount != null && toAccount != null) {
-                OperationResult result = controller.Transfer(fromAccount, toAccount, amount);
+                OperationResult result = baseController.Transfer(fromAccount, toAccount, amount);
                 if (result instanceof OperationResult.Success) {
                     System.out.println("Перевод выполнен.");
                 } else if (result instanceof OperationResult.OperationError error) {

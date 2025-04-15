@@ -9,10 +9,12 @@ import Application.ResultTypes.OperationResult;
 import Application.ResultTypes.UserResult;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-public interface IUserController {
+@Component
+public interface IBaseController {
 
     UserResult CreateUser(User user);
 
@@ -34,13 +36,13 @@ public interface IUserController {
 
     UserResult DeleteUser(User user);
 
-    void GetUserInfo(int id);
-
     void AddFriend(int userId, int otherId);
 
     void RemoveFriend(int userId, int otherId);
 
-    BankAccountResult addBankAccount(int userId, BankAccount bankAccount);
+    BankAccountResult AddBankAccount(int userId, BankAccount bankAccount);
+
+    BankAccountResult UpdateBankAccount(BankAccount bankAccount);
 
     BankAccountResult RemoveBankAccount(int userId, BankAccount bankAccount);
 
@@ -51,8 +53,6 @@ public interface IUserController {
     OperationResult Withdraw(BankAccount bankAccount, Double amount);
 
     OperationResult Transfer(BankAccount bankAccount1, BankAccount bankAccount2, Double amount);
-
-    OperationResult GetOperationHistory(int bankAccountId);
 
     UserResult DeleteUserById(int id);
 }

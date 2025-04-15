@@ -3,7 +3,7 @@ package Presentation.Controllers;
 import Application.Models.Entities.User;
 import Application.ResultTypes.UserResult;
 import Presentation.DTO.UserDTO;
-import Presentation.Interfaces.IUserController;
+import Presentation.Interfaces.IBaseController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/users")
 public class UserDTOController {
 
-    private final IUserController userController;
+    private final IBaseController baseController;
 
     @Autowired
-    public UserDTOController(IUserController userController) {
-        this.userController = userController;
+    public UserDTOController(IBaseController baseController) {
+        this.baseController = baseController;
     }
 
     @Operation(summary = "Получить пользователя по ID", description = "Получает информацию о пользователе по ID")
@@ -33,7 +33,7 @@ public class UserDTOController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@Parameter(description = "ID пользователя") @PathVariable int id) {
-        User user = userController.GetUserById(id);
+        User user = baseController.GetUserById(id);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
@@ -47,7 +47,7 @@ public class UserDTOController {
     })
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody User user) {
-        UserResult result = userController.CreateUser(user);
+        UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } else {
@@ -63,11 +63,11 @@ public class UserDTOController {
     })
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUser(@Parameter(description = "ID пользователя") @PathVariable int id, @RequestBody User user) {
-        User existingUser = userController.GetUserById(id);
+        User existingUser = baseController.GetUserById(id);
         if (existingUser == null) {
             return ResponseEntity.notFound().build();
         }
-        UserResult result = userController.UpdateUser(user);
+        UserResult result = baseController.UpdateUser(user);
         if (result instanceof UserResult.Success) {
             return ResponseEntity.ok(new UserDTO(user));
         } else {
@@ -82,11 +82,11 @@ public class UserDTOController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@Parameter(description = "ID пользователя") @PathVariable int id) {
-        User user = userController.GetUserById(id);
+        User user = baseController.GetUserById(id);
         if (user == null) {
             return ResponseEntity.notFound().build();
         }
-        UserResult result = userController.DeleteUser(user);
+        UserResult result = baseController.DeleteUser(user);
         if (result instanceof UserResult.Success) {
             return ResponseEntity.noContent().build();
         } else {

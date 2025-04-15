@@ -33,7 +33,8 @@ public class User {
     @Column(name = "haircolor")
     private HairColor hairType;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}
+            , orphanRemoval = true, fetch = FetchType.EAGER)
     private List<BankAccount> bankAccounts = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)

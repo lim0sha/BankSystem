@@ -10,7 +10,7 @@ import Application.Models.Enums.Sex;
 import Application.ResultTypes.BankAccountResult;
 import Application.ResultTypes.OperationResult;
 import Application.ResultTypes.UserResult;
-import Presentation.Interfaces.IUserController;
+import Presentation.Interfaces.IBaseController;
 import DataAccess.Services.Interfaces.IBankAccountService;
 import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class UserController implements IUserController {
+public class BaseController implements IBaseController {
 
     private final IUserManager userManager;
     private final IUserService userService;
@@ -28,7 +28,7 @@ public class UserController implements IUserController {
     private final IOperationService operationService;
 
     @Autowired
-    public UserController(IUserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService) {
+    public BaseController(IUserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService) {
         this.userManager = userManager;
         this.userService = userService;
         this.bankAccountService = bankAccountService;
@@ -135,11 +135,6 @@ public class UserController implements IUserController {
     }
 
     @Override
-    public void GetUserInfo(int id) {
-        userManager.GetUserInfo(userService.GetUser(id));
-    }
-
-    @Override
     public void AddFriend(int userId, int otherId) {
         User user1 = userService.GetUser(userId);
         User user2 = userService.GetUser(otherId);
@@ -158,15 +153,31 @@ public class UserController implements IUserController {
     }
 
     @Override
-    public BankAccountResult addBankAccount(int userId, BankAccount bankAccount) {
+    public BankAccountResult AddBankAccount(int userId, BankAccount bankAccount) {
         try {
             User user = userService.GetUser(userId);
+            if (user == null) {
+                throw new IllegalStateException("User not found");
+            }
+            bankAccount.setId(null);
             userManager.AddBankAccount(user, bankAccount);
             userService.SaveUser(user);
-            bankAccountService.UpdateAccount(bankAccount);
             return new BankAccountResult.Success();
         } catch (Exception e) {
             return new BankAccountResult.BankAccountCreationError(e.getMessage());
+        }
+    }
+
+    @Override
+    public BankAccountResult UpdateBankAccount(BankAccount bankAccount) {
+        try {
+            if (bankAccount == null || bankAccount.getId() == null) {
+                return new BankAccountResult.BankAccountUpdateError("Некорректные данные счета");
+            }
+            bankAccountService.UpdateAccount(bankAccount);
+            return new BankAccountResult.Success();
+        } catch (Exception e) {
+            return new BankAccountResult.BankAccountUpdateError(e.getMessage());
         }
     }
 
@@ -176,7 +187,7 @@ public class UserController implements IUserController {
             User user = userService.GetUser(userId);
             userManager.RemoveBankAccount(user, bankAccount);
             userService.SaveUser(user);
-            bankAccountService.UpdateAccount(bankAccount);
+            bankAccountService.DeleteAccount(bankAccount);
             return new BankAccountResult.Success();
         } catch (Exception e) {
             return new BankAccountResult.BankAccountDeletionError(e.getMessage());
@@ -243,18 +254,6 @@ public class UserController implements IUserController {
 
             return new OperationResult.Success();
         } catch (Exception e) {
-            return new OperationResult.OperationError(e.getMessage());
-        }
-    }
-
-    @Override
-    public OperationResult GetOperationHistory(int bankAccountId) {
-        try {
-            BankAccount account = bankAccountService.GetAccount(bankAccountId);
-            List<Operation> operations = operationService.FindAllOperationsByAccountId(account.getId());
-            return userManager.PrintHistory(account, operations);
-        } catch (Exception e) {
-            e.printStackTrace();
             return new OperationResult.OperationError(e.getMessage());
         }
     }

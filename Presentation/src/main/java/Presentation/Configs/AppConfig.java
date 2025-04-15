@@ -2,11 +2,11 @@ package Presentation.Configs;
 
 import Application.Managers.IUserManager;
 import Presentation.Console.Menu;
-import Presentation.Controllers.*;
 import DataAccess.Services.Interfaces.IBankAccountService;
 import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
-import Presentation.Interfaces.IUserController;
+import Presentation.Interfaces.IBaseController;
+import Presentation.Controllers.BaseController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -22,16 +22,16 @@ public class AppConfig {
     }
 
     @Bean
-    public UserController userController(
+    public BaseController baseController(
             IUserManager userManager,
             IUserService userService,
             IBankAccountService bankAccountService,
             IOperationService operationService) {
-        return new UserController(userManager, userService, bankAccountService, operationService);
+        return new BaseController(userManager, userService, bankAccountService, operationService);
     }
 
     @Bean
-    public Menu menu(IUserController userController, Scanner scanner) {
-        return new Menu(userController, scanner);
+    public Menu menu(IBaseController baseController, Scanner scanner) {
+        return new Menu(baseController, scanner);
     }
 }

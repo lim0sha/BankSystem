@@ -25,8 +25,11 @@ public class BankAccountService implements IBankAccountService {
     }
 
     @Override
+    @Transactional
     public void UpdateAccount(BankAccount account) {
-        BankAccountRepository.save(account);
+        if (account != null) {
+            BankAccountRepository.save(account);
+        }
     }
 
     @Override
