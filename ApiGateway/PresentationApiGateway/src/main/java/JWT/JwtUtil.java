@@ -39,12 +39,13 @@ public class JwtUtil {
         return claimsResolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .setSigningKey(getSecretKey())
+    private Claims extractAllClaims(String token){
+        return Jwts
+                .parser()
+                .verifyWith(getSecretKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     private Boolean isTokenExpired(String token) {
@@ -54,9 +55,11 @@ public class JwtUtil {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
 
+        // Добавляем роли пользователя в токен
         claims.put("role", userDetails.getAuthorities().stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
                 .collect(Collectors.toList()));
+
         return createToken(claims, userDetails.getUsername());
     }
 
@@ -76,6 +79,7 @@ public class JwtUtil {
     }
 
     public List<String> extractRoles(String token) {
+        // Извлекаем роли как список строк
         return extractClaim(token, claims -> claims.get("role", List.class));
     }
 }

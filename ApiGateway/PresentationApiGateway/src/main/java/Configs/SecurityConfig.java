@@ -9,6 +9,7 @@ import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,15 +33,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/auth/**").permitAll()
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/client/**").hasAuthority("ROLE_CLIENT")
-                        .anyRequest().authenticated()
+                        .requestMatchers("/login").permitAll() // Путь /login доступен всем
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") // Путь для администраторов
+                        .requestMatchers("/client/**").hasAuthority("ROLE_CLIENT") // Путь для клиентов
+                        .anyRequest().authenticated() // Для остальных путей нужна авторизация
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Добавляем фильтр JWT
 
         return http.build();
     }
@@ -55,7 +56,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider daoAuthProvider) {
-        return new ProviderManager(List.of(daoAuthProvider));
+        return new ProviderManager(List.of(daoAuthenticationProvider())); // Правильная настройка для провайдера аутентификации
     }
 
     @Bean

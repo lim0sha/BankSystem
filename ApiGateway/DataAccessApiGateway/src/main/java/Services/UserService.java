@@ -19,6 +19,7 @@ public class UserService {
     }
 
     public User CreateUser(String username, String password, Role role) {
+        System.out.println("Creating user: " + username + " with role: " + role);
         String pwHash = encoder.encode(password);
         User user = new User(username, pwHash, role);
         return userRepository.save(user);

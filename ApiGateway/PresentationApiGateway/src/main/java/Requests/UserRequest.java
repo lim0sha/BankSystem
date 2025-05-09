@@ -1,20 +1,13 @@
 package Requests;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import Models.Enums.Role;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@AllArgsConstructor
+@Data
+@NoArgsConstructor
 public class UserRequest {
-
-    private final String username;
-    private final String password;
-    private final Role role;
-
-    public UserRequest(String username, String password) {
-        this.username = username;
-        this.password = password;
-        this.role = null;
-    }
+    private String username;
+    private String password;
+    private Role role;
 }

@@ -29,7 +29,7 @@ spring:
 
 # JWT Configuration
 jwt:
-  secret: my_super_secret_key_123456
+  secret: Z2FsdGZpZDpxNDqf9r1mPZYuZAsZZEwOovUEY9NhcY46uo3bB9XzRXMKbK6R03Qp
   expiration: 86400000 # 1 day
 
 server:
