@@ -28,104 +28,109 @@ public class AdminController {
         this.userService = userService;
     }
 
-    // 1 - Создание пользователя
-    // 2 - Создание администратора
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users/create")
     public ResponseEntity<String> CreateUser(@RequestBody UserRequest userRequest) {
         try {
-            String url = "http://localhost:8080/users/create";
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<UserRequest> requestHttpEntity = new HttpEntity<>(userRequest, headers);
-
-            ResponseEntity<String> response = restTemplate.postForEntity(url, requestHttpEntity, String.class);
-            if (!response.getStatusCode().is2xxSuccessful()) {
-                return ResponseEntity.status(response.getStatusCode())
-                        .body("Failed to create new user.");
-            }
-
-            System.out.println("User created successfully.");
             userService.CreateUser(userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole());
-            return ResponseEntity.ok("Localhost user created.");
+            return ResponseEntity.ok("User created successfully.");
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error creating user: " + e.getMessage());
         }
     }
 
-    // 3 - Получение информации о всех пользователях с фильтрацией по гендеру и цвету волос
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
-    public ResponseEntity<List<UserDTO>> GetAllUsersFiltered(
+    public ResponseEntity<?> GetAllUsersFiltered(
             @RequestParam(required = false) String sex,
             @RequestParam(required = false) String hairColor
     ) {
-        String url = "http://localhost:8080/data/users?sex=" + (sex != null ? sex : "") +
-                "&hairColor=" + (hairColor != null ? hairColor : "");
+        try {
+            String url = "http://localhost:8080/data/users?sex=" + (sex != null ? sex : "") +
+                    "&hairColor=" + (hairColor != null ? hairColor : "");
 
-        ResponseEntity<List<UserDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<UserDTO>>() {}
-        );
-
-        List<UserDTO> users  = response.getBody();
-        return ResponseEntity.ok(users);
+            ResponseEntity<List<UserDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {}
+            );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving users: " + e.getMessage());
+        }
     }
 
-    // 4 - Получение информации о пользователе по его идентификатору
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/{id}")
-    public ResponseEntity<UserDTO> GetUserById(@PathVariable int id) {
-        String url = "http://localhost:8080/users/" + id;
-        return restTemplate.getForEntity(url, UserDTO.class);
+    public ResponseEntity<?> GetUserById(@PathVariable int id) {
+        try {
+            String url = "http://localhost:8080/users/" + id;
+            return restTemplate.getForEntity(url, UserDTO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving user: " + e.getMessage());
+        }
     }
 
-
-    // 5 - Получение информации о всех счётах пользователей
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts")
-    public ResponseEntity<List<BankAccountDTO>> GetAllBankAccounts() {
-        String url = "http://localhost:8080/data/accounts";
-        ResponseEntity<List<BankAccountDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {}
-        );
-        return ResponseEntity.ok(response.getBody());
+    public ResponseEntity<?> GetAllBankAccounts() {
+        try {
+            String url = "http://localhost:8080/data/accounts";
+            ResponseEntity<List<BankAccountDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {}
+            );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving accounts: " + e.getMessage());
+        }
     }
 
-    // 6 - Получение информации о счетах по идентификатору пользователя
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts/user/{userId}")
     public ResponseEntity<?> GetAccountsByUserId(@PathVariable int userId) {
-        String url = "http://localhost:8080/data/users/" + userId + "/accounts";
-        ResponseEntity<BankAccountDTO[]> response = restTemplate.getForEntity(url, BankAccountDTO[].class);
-        return ResponseEntity.ok(response.getBody());
+        try {
+            String url = "http://localhost:8080/data/users/" + userId + "/accounts";
+            ResponseEntity<BankAccountDTO[]> response = restTemplate.getForEntity(url, BankAccountDTO[].class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving accounts for user: " + e.getMessage());
+        }
     }
 
-    // 7 - Получение информации о счёте со списком его операций по идентификатору счёта
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts/{id}/operations")
-    public ResponseEntity<List<OperationDTO>> getOperationsByAccountId(
+    public ResponseEntity<?> getOperationsByAccountId(
             @PathVariable int id,
             @RequestParam(required = false) String type
     ) {
-        String url = "http://localhost:8080/data/operations?accountId=" + id;
-        if (type != null && !type.isEmpty()) {
-            url += "&type=" + type;
+        try {
+            String url = "http://localhost:8080/data/operations?accountId=" + id;
+            if (type != null && !type.isEmpty()) {
+                url += "&type=" + type;
+            }
+
+            ResponseEntity<List<OperationDTO>> response = restTemplate.exchange(
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {}
+            );
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving operations: " + e.getMessage());
         }
-
-        ResponseEntity<List<OperationDTO>> response = restTemplate.exchange(
-                url, HttpMethod.GET, null, new ParameterizedTypeReference<List<OperationDTO>>() {}
-        );
-
-        return ResponseEntity.ok(response.getBody());
     }
 
-    // 8 - Деавторизация
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
-    public ResponseEntity<String> Logout() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return ResponseEntity.ok("Admin " + authentication.getName() + " logged out.");
+    public ResponseEntity<?> Logout() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            return ResponseEntity.ok("Admin " + authentication.getName() + " logged out.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error during logout: " + e.getMessage());
+        }
     }
 }

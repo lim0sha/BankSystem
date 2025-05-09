@@ -11,6 +11,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/client")
 public class ClientController {
@@ -30,86 +32,140 @@ public class ClientController {
         return userService.FindUserByUsername(username).getId();
     }
 
-    // 1 - Получение информации о себе
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/me")
-    public ResponseEntity<UserDTO> getCurrentUser() {
-        Long userId = getCurrentUserId();
-        String url = "http://localhost:8080/users/" + userId;
-        return restTemplate.getForEntity(url, UserDTO.class);
+    public ResponseEntity<?> getCurrentUser() {
+        try {
+            Long userId = getCurrentUserId();
+            String url = "http://localhost:8080/users/" + userId;
+            return restTemplate.getForEntity(url, UserDTO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving current user: " + e.getMessage());
+        }
     }
 
-    // 2 - Получение своих счетов
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/accounts")
-    public ResponseEntity<BankAccountDTO[]> getMyAccounts() {
-        Long userId = getCurrentUserId();
-        String url = "http://localhost:8080/data/users/" + userId + "/accounts";
-        ResponseEntity<BankAccountDTO[]> response = restTemplate.getForEntity(url, BankAccountDTO[].class);
-        return ResponseEntity.ok(response.getBody());
+    public ResponseEntity<?> getMyAccounts() {
+        try {
+            Long userId = getCurrentUserId();
+            String url = "http://localhost:8080/data/users/" + userId + "/accounts";
+            ResponseEntity<BankAccountDTO[]> response = restTemplate.getForEntity(url, BankAccountDTO[].class);
+            return ResponseEntity.ok(response.getBody());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving accounts: " + e.getMessage());
+        }
     }
 
-    // 3 - Получение конкретного счёта
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/accounts/{id}")
-    public ResponseEntity<BankAccountDTO> getAccountById(@PathVariable int id) {
-        String url = "http://localhost:8080/data/accounts/" + id;
-        ResponseEntity<BankAccountDTO> response = restTemplate.getForEntity(url, BankAccountDTO.class);
-        return ResponseEntity.ok(response.getBody());
+    public ResponseEntity<?> getAccountById(@PathVariable int id) {
+        try {
+            Long userId = getCurrentUserId();
+
+            String userAccountsUrl = "http://localhost:8080/data/users/" + userId + "/accounts";
+            ResponseEntity<BankAccountDTO[]> accountsResponse = restTemplate.getForEntity(userAccountsUrl, BankAccountDTO[].class);
+
+            boolean ownsAccount = false;
+            if (accountsResponse.getStatusCode().is2xxSuccessful()) {
+                for (BankAccountDTO account : Objects.requireNonNull(accountsResponse.getBody())) {
+                    if (account.getId() == id) {
+                        ownsAccount = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!ownsAccount) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied to account.");
+            }
+
+            String url = "http://localhost:8080/data/accounts/" + id;
+            return restTemplate.getForEntity(url, BankAccountDTO.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error retrieving account: " + e.getMessage());
+        }
     }
 
-    // 4 - Добавление другого пользователя в друзья
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/friends/add/{otherId}")
-    public ResponseEntity<String> addFriend(@PathVariable int otherId) {
-        Long userId = getCurrentUserId();
-        String url = "http://localhost:8080/interactions/friends/add/" + userId + "/" + otherId;
-        return restTemplate.postForEntity(url, null, String.class);
+    public ResponseEntity<?> addFriend(@PathVariable int otherId) {
+        try {
+            Long userId = getCurrentUserId();
+            String url = "http://localhost:8080/interactions/friends/add/" + userId + "/" + otherId;
+            return restTemplate.postForEntity(url, null, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error adding friend: " + e.getMessage());
+        }
     }
 
-    // 5 - Удаление пользователя из друзей
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/friends/remove/{otherId}")
-    public ResponseEntity<String> removeFriend(@PathVariable int otherId) {
-        Long userId = getCurrentUserId();
-        String url = "http://localhost:8080/interactions/friends/remove/" + userId + "/" + otherId;
-        return restTemplate.postForEntity(url, null, String.class);
+    public ResponseEntity<?> removeFriend(@PathVariable int otherId) {
+        try {
+            Long userId = getCurrentUserId();
+            String url = "http://localhost:8080/interactions/friends/remove/" + userId + "/" + otherId;
+            return restTemplate.postForEntity(url, null, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error removing friend: " + e.getMessage());
+        }
     }
 
-    // 6.1 - Пополнение
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/accounts/{accountId}/deposit/{amount}")
-    public ResponseEntity<String> deposit(@PathVariable int accountId, @PathVariable double amount) {
-        String url = "http://localhost:8080/interactions/deposit/" + accountId + "/" + amount;
-        return restTemplate.postForEntity(url, null, String.class);
+    public ResponseEntity<?> deposit(@PathVariable int accountId, @PathVariable double amount) {
+        try {
+            String url = "http://localhost:8080/interactions/deposit/" + accountId + "/" + amount;
+            return restTemplate.postForEntity(url, null, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error during deposit: " + e.getMessage());
+        }
     }
 
-    // 6.2 - Снятие
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/accounts/{accountId}/withdraw/{amount}")
-    public ResponseEntity<String> withdraw(@PathVariable int accountId, @PathVariable double amount) {
-        String url = "http://localhost:8080/interactions/withdraw/" + accountId + "/" + amount;
-        return restTemplate.postForEntity(url, null, String.class);
+    public ResponseEntity<?> withdraw(@PathVariable int accountId, @PathVariable double amount) {
+        try {
+            String url = "http://localhost:8080/interactions/withdraw/" + accountId + "/" + amount;
+            return restTemplate.postForEntity(url, null, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error during withdrawal: " + e.getMessage());
+        }
     }
 
-    // 6.3 - Перевод
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/accounts/transfer/{fromId}/{toId}/{amount}")
-    public ResponseEntity<String> transfer(
+    public ResponseEntity<?> transfer(
             @PathVariable int fromId,
             @PathVariable int toId,
             @PathVariable double amount
     ) {
-        String url = "http://localhost:8080/interactions/transfer/" + fromId + "/" + toId + "/" + amount;
-        return restTemplate.postForEntity(url, null, String.class);
+        try {
+            String url = "http://localhost:8080/interactions/transfer/" + fromId + "/" + toId + "/" + amount;
+            return restTemplate.postForEntity(url, null, String.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error during transfer: " + e.getMessage());
+        }
     }
 
-    // 7 - Деавторизация
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
-    public ResponseEntity<String> logout() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return ResponseEntity.ok("Client " + username + " logged out.");
+    public ResponseEntity<?> logout() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            return ResponseEntity.ok("Client " + username + " logged out.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Error during logout: " + e.getMessage());
+        }
     }
 }
