@@ -29,6 +29,9 @@ DataAccess.iml
 Presentation.iml
 Application.iml
 target
+DataAccessApiGateway.iml
+ApiGateway.iml
+ApplicationApiGateway.iml
 
 ### VS Code ###
 .vscode/

@@ -96,6 +96,8 @@
         <module>Application</module>
         <module>DataAccess</module>
         <module>Presentation</module>
+        <module>ApiGateway</module>
+        <module>ApiGateway/DataAccessApiGateway</module>
     </modules>
 
     <build>
