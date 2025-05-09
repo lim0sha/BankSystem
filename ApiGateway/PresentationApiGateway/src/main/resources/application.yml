@@ -15,12 +15,17 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: true
+    open-in-view: false
     properties:
-      hibernate.format_sql: true
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    enabled: false
+    check-template-location: false
 
 # JWT Configuration
 jwt:
