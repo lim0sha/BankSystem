@@ -54,8 +54,6 @@ public class JwtUtil {
 
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-
-        // Добавляем роли пользователя в токен
         claims.put("role", userDetails.getAuthorities().stream()
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
                 .collect(Collectors.toList()));
@@ -79,7 +77,6 @@ public class JwtUtil {
     }
 
     public List<String> extractRoles(String token) {
-        // Извлекаем роли как список строк
         return extractClaim(token, claims -> claims.get("role", List.class));
     }
 }

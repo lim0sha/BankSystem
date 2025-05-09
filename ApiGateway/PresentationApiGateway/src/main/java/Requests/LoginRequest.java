@@ -4,7 +4,7 @@ public class LoginRequest {
     private String username;
     private String password;
 
-    public LoginRequest() {}  // ОБЯЗАТЕЛЬНО
+    public LoginRequest() {}
 
     public String getUsername() {
         return username;

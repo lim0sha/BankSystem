@@ -36,10 +36,10 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login").permitAll() // Путь /login доступен всем
-                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN") // Путь для администраторов
-                        .requestMatchers("/client/**").hasAuthority("ROLE_CLIENT") // Путь для клиентов
-                        .anyRequest().authenticated() // Для остальных путей нужна авторизация
+                        .requestMatchers("/login").permitAll()
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/client/**").hasAuthority("ROLE_CLIENT")
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class); // Добавляем фильтр JWT
 
@@ -56,7 +56,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(DaoAuthenticationProvider daoAuthProvider) {
-        return new ProviderManager(List.of(daoAuthenticationProvider())); // Правильная настройка для провайдера аутентификации
+        return new ProviderManager(List.of(daoAuthenticationProvider()));
     }
 
     @Bean

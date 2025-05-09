@@ -36,29 +36,22 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<JwtResponse> login(@RequestBody LoginRequest loginRequest) {
         try {
-            // Проверка данных
             if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new JwtResponse("Username and password are required"));
             }
-
-            // Аутентификация пользователя
+          
             Authentication auth = new UsernamePasswordAuthenticationToken(
                     loginRequest.getUsername(), loginRequest.getPassword()
             );
 
-            authenticationManager.authenticate(auth); // Попытка аутентификации
-
-            // Загрузка данных пользователя
+            authenticationManager.authenticate(auth);
+            
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
-            String jwt = jwtUtil.generateToken(userDetails); // Генерация токена
-
-            // Возвращаем токен в ответе
+            String jwt = jwtUtil.generateToken(userDetails);
             return ResponseEntity.ok(new JwtResponse(jwt));
         } catch (BadCredentialsException e) {
-            // Неверные учетные данные
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new JwtResponse("Invalid username or password"));
         } catch (Exception e) {
-            // Любые другие исключения
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new JwtResponse("An unexpected error occurred"));
         }
     }
