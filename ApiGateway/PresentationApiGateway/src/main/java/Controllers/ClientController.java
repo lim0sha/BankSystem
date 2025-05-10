@@ -2,6 +2,7 @@ package Controllers;
 
 import DTO.BankAccountDTO;
 import DTO.UserDTO;
+import JWT.HttpClientUtil;
 import Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -19,41 +20,22 @@ public class ClientController {
 
     private final RestTemplate restTemplate;
     private final UserService userService;
+    private final HttpClientUtil clientUtil;
 
     @Autowired
-    public ClientController(RestTemplate restTemplate, UserService userService) {
+    public ClientController(RestTemplate restTemplate, UserService userService, HttpClientUtil clientUtil) {
         this.restTemplate = restTemplate;
         this.userService = userService;
-    }
-
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        return userService.FindUserByUsername(username).getId();
-    }
-
-    private String getCurrentToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getCredentials() instanceof String token) {
-            return token;
-        }
-        return null;
-    }
-
-    private HttpEntity<?> withAuthHeaders() {
-        String token = getCurrentToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        return new HttpEntity<>(headers);
+        this.clientUtil = clientUtil;
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
         try {
-            Long userId = getCurrentUserId();
+            Long userId = clientUtil.getCurrentUserId(userService);
             String url = "http://localhost:8080/users/" + userId;
-            return restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), UserDTO.class);
+            return restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), UserDTO.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error retrieving current user: " + e.getMessage());
@@ -64,9 +46,9 @@ public class ClientController {
     @GetMapping("/accounts")
     public ResponseEntity<?> getMyAccounts() {
         try {
-            Long userId = getCurrentUserId();
+            Long userId = clientUtil.getCurrentUserId(userService);
             String url = "http://localhost:8080/data/users/" + userId + "/accounts";
-            ResponseEntity<BankAccountDTO[]> response = restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), BankAccountDTO[].class);
+            ResponseEntity<BankAccountDTO[]> response = restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO[].class);
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,10 +60,10 @@ public class ClientController {
     @GetMapping("/accounts/{id}")
     public ResponseEntity<?> getAccountById(@PathVariable int id) {
         try {
-            Long userId = getCurrentUserId();
+            Long userId = clientUtil.getCurrentUserId(userService);
             String userAccountsUrl = "http://localhost:8080/data/users/" + userId + "/accounts";
             ResponseEntity<BankAccountDTO[]> accountsResponse = restTemplate.exchange(
-                    userAccountsUrl, HttpMethod.GET, withAuthHeaders(), BankAccountDTO[].class);
+                    userAccountsUrl, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO[].class);
 
             boolean ownsAccount = false;
             if (accountsResponse.getStatusCode().is2xxSuccessful()) {
@@ -98,7 +80,7 @@ public class ClientController {
             }
 
             String url = "http://localhost:8080/data/accounts/" + id;
-            return restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), BankAccountDTO.class);
+            return restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error retrieving account: " + e.getMessage());
@@ -109,9 +91,9 @@ public class ClientController {
     @PostMapping("/friends/add/{otherId}")
     public ResponseEntity<?> addFriend(@PathVariable int otherId) {
         try {
-            Long userId = getCurrentUserId();
+            Long userId = clientUtil.getCurrentUserId(userService);
             String url = "http://localhost:8080/interactions/friends/add/" + userId + "/" + otherId;
-            return restTemplate.exchange(url, HttpMethod.POST, withAuthHeaders(), String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error adding friend: " + e.getMessage());
@@ -122,9 +104,9 @@ public class ClientController {
     @PostMapping("/friends/remove/{otherId}")
     public ResponseEntity<?> removeFriend(@PathVariable int otherId) {
         try {
-            Long userId = getCurrentUserId();
+            Long userId = clientUtil.getCurrentUserId(userService);
             String url = "http://localhost:8080/interactions/friends/remove/" + userId + "/" + otherId;
-            return restTemplate.exchange(url, HttpMethod.POST, withAuthHeaders(), String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error removing friend: " + e.getMessage());
@@ -136,7 +118,7 @@ public class ClientController {
     public ResponseEntity<?> deposit(@PathVariable int accountId, @PathVariable double amount) {
         try {
             String url = "http://localhost:8080/interactions/deposit/" + accountId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, withAuthHeaders(), String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error during deposit: " + e.getMessage());
@@ -148,7 +130,7 @@ public class ClientController {
     public ResponseEntity<?> withdraw(@PathVariable int accountId, @PathVariable double amount) {
         try {
             String url = "http://localhost:8080/interactions/withdraw/" + accountId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, withAuthHeaders(), String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error during withdrawal: " + e.getMessage());
@@ -164,7 +146,7 @@ public class ClientController {
     ) {
         try {
             String url = "http://localhost:8080/interactions/transfer/" + fromId + "/" + toId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, withAuthHeaders(), String.class);
+            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error during transfer: " + e.getMessage());

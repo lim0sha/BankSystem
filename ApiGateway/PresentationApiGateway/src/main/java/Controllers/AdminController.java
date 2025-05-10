@@ -3,6 +3,7 @@ package Controllers;
 import DTO.BankAccountDTO;
 import DTO.OperationDTO;
 import DTO.UserDTO;
+import JWT.HttpAdminUtil;
 import Requests.UserRequest;
 import Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,26 +22,13 @@ import java.util.List;
 public class AdminController {
     private final RestTemplate restTemplate;
     private final UserService userService;
+    private final HttpAdminUtil adminUtil;
 
     @Autowired
-    public AdminController(RestTemplate restTemplate, UserService userService) {
+    public AdminController(RestTemplate restTemplate, UserService userService, HttpAdminUtil adminUtil) {
         this.restTemplate = restTemplate;
         this.userService = userService;
-    }
-
-    private String getCurrentToken() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getCredentials() instanceof String token) {
-            return token;
-        }
-        return null;
-    }
-
-    private HttpEntity<?> withAuthHeaders() {
-        String token = getCurrentToken();
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", "Bearer " + token);
-        return new HttpEntity<>(headers);
+        this.adminUtil = adminUtil;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -66,7 +54,7 @@ public class AdminController {
                     "&hairColor=" + (hairColor != null ? hairColor : "");
 
             ResponseEntity<List<UserDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, withAuthHeaders(), new ParameterizedTypeReference<>() {}
+                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
             );
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
@@ -80,7 +68,7 @@ public class AdminController {
     public ResponseEntity<?> GetUserById(@PathVariable int id) {
         try {
             String url = "http://localhost:8080/users/" + id;
-            return restTemplate.exchange(url, HttpMethod.GET, withAuthHeaders(), UserDTO.class);
+            return restTemplate.exchange(url, HttpMethod.GET, adminUtil.withAuthHeaders(), UserDTO.class);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Error retrieving user: " + e.getMessage());
@@ -93,7 +81,7 @@ public class AdminController {
         try {
             String url = "http://localhost:8080/data/accounts";
             ResponseEntity<List<BankAccountDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, withAuthHeaders(), new ParameterizedTypeReference<>() {}
+                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
             );
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
@@ -108,7 +96,7 @@ public class AdminController {
         try {
             String url = "http://localhost:8080/data/users/" + userId + "/accounts";
             ResponseEntity<BankAccountDTO[]> response = restTemplate.exchange(
-                    url, HttpMethod.GET, withAuthHeaders(), BankAccountDTO[].class);
+                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), BankAccountDTO[].class);
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
             e.printStackTrace();
@@ -129,7 +117,7 @@ public class AdminController {
             }
 
             ResponseEntity<List<OperationDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, withAuthHeaders(), new ParameterizedTypeReference<>() {}
+                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
             );
             return ResponseEntity.ok(response.getBody());
         } catch (Exception e) {
