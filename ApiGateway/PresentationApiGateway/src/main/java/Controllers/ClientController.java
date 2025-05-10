@@ -1,140 +1,64 @@
 package Controllers;
 
-import DTO.BankAccountDTO;
-import DTO.UserDTO;
-import JWT.HttpClientUtil;
-import Services.UserService;
+import Services.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/client")
 public class ClientController {
 
-    private final RestTemplate restTemplate;
-    private final UserService userService;
-    private final HttpClientUtil clientUtil;
+    private final ClientService clientService;
 
     @Autowired
-    public ClientController(RestTemplate restTemplate, UserService userService, HttpClientUtil clientUtil) {
-        this.restTemplate = restTemplate;
-        this.userService = userService;
-        this.clientUtil = clientUtil;
+    public ClientController(ClientService clientService) {
+        this.clientService = clientService;
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser() {
-        try {
-            Long userId = clientUtil.getCurrentUserId(userService);
-            String url = "http://localhost:8080/users/" + userId;
-            return restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), UserDTO.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving current user: " + e.getMessage());
-        }
+        return clientService.getCurrentUser();
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/accounts")
     public ResponseEntity<?> getMyAccounts() {
-        try {
-            Long userId = clientUtil.getCurrentUserId(userService);
-            String url = "http://localhost:8080/data/users/" + userId + "/accounts";
-            ResponseEntity<BankAccountDTO[]> response = restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO[].class);
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving accounts: " + e.getMessage());
-        }
+        return clientService.getMyAccounts();
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/accounts/{id}")
     public ResponseEntity<?> getAccountById(@PathVariable int id) {
-        try {
-            Long userId = clientUtil.getCurrentUserId(userService);
-            String userAccountsUrl = "http://localhost:8080/data/users/" + userId + "/accounts";
-            ResponseEntity<BankAccountDTO[]> accountsResponse = restTemplate.exchange(
-                    userAccountsUrl, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO[].class);
-
-            boolean ownsAccount = false;
-            if (accountsResponse.getStatusCode().is2xxSuccessful()) {
-                for (BankAccountDTO account : Objects.requireNonNull(accountsResponse.getBody())) {
-                    if (account.getId() == id) {
-                        ownsAccount = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!ownsAccount) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied to account.");
-            }
-
-            String url = "http://localhost:8080/data/accounts/" + id;
-            return restTemplate.exchange(url, HttpMethod.GET, clientUtil.withAuthHeaders(), BankAccountDTO.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving account: " + e.getMessage());
-        }
+        return clientService.getAccountById(id);
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/friends/add/{otherId}")
     public ResponseEntity<?> addFriend(@PathVariable int otherId) {
-        try {
-            Long userId = clientUtil.getCurrentUserId(userService);
-            String url = "http://localhost:8080/interactions/friends/add/" + userId + "/" + otherId;
-            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error adding friend: " + e.getMessage());
-        }
+        return clientService.addFriend(otherId);
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/friends/remove/{otherId}")
     public ResponseEntity<?> removeFriend(@PathVariable int otherId) {
-        try {
-            Long userId = clientUtil.getCurrentUserId(userService);
-            String url = "http://localhost:8080/interactions/friends/remove/" + userId + "/" + otherId;
-            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error removing friend: " + e.getMessage());
-        }
+        return clientService.removeFriend(otherId);
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/accounts/{accountId}/deposit/{amount}")
     public ResponseEntity<?> deposit(@PathVariable int accountId, @PathVariable double amount) {
-        try {
-            String url = "http://localhost:8080/interactions/deposit/" + accountId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error during deposit: " + e.getMessage());
-        }
+        return clientService.deposit(accountId, amount);
     }
 
     @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/accounts/{accountId}/withdraw/{amount}")
     public ResponseEntity<?> withdraw(@PathVariable int accountId, @PathVariable double amount) {
-        try {
-            String url = "http://localhost:8080/interactions/withdraw/" + accountId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error during withdrawal: " + e.getMessage());
-        }
+        return clientService.withdraw(accountId, amount);
     }
 
     @PreAuthorize("hasRole('CLIENT')")
@@ -144,25 +68,13 @@ public class ClientController {
             @PathVariable int toId,
             @PathVariable double amount
     ) {
-        try {
-            String url = "http://localhost:8080/interactions/transfer/" + fromId + "/" + toId + "/" + amount;
-            return restTemplate.exchange(url, HttpMethod.POST, clientUtil.withAuthHeaders(), String.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error during transfer: " + e.getMessage());
-        }
+        return clientService.transfer(fromId, toId, amount);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
-        try {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String username = authentication.getName();
-            return ResponseEntity.ok("Client " + username + " logged out.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error during logout: " + e.getMessage());
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return ResponseEntity.ok("Client " + authentication.getName() + " logged out.");
     }
 }

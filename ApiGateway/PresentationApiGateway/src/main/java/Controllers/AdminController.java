@@ -3,128 +3,77 @@ package Controllers;
 import DTO.BankAccountDTO;
 import DTO.OperationDTO;
 import DTO.UserDTO;
-import JWT.HttpAdminUtil;
+import Requests.UserFilterRequest;
 import Requests.UserRequest;
+import Services.AdminService;
 import Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
 public class AdminController {
-    private final RestTemplate restTemplate;
     private final UserService userService;
-    private final HttpAdminUtil adminUtil;
+    private final AdminService adminService;
 
     @Autowired
-    public AdminController(RestTemplate restTemplate, UserService userService, HttpAdminUtil adminUtil) {
-        this.restTemplate = restTemplate;
+    public AdminController(UserService userService, AdminService adminService) {
         this.userService = userService;
-        this.adminUtil = adminUtil;
+        this.adminService = adminService;
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users/create")
     public ResponseEntity<String> CreateUser(@RequestBody UserRequest userRequest) {
-        try {
-            userService.CreateUser(userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole());
-            return ResponseEntity.ok("User created successfully.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error creating user: " + e.getMessage());
-        }
+        userService.CreateUser(userRequest.getUsername(), userRequest.getPassword(), userRequest.getRole());
+        return ResponseEntity.ok("User created successfully.");
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
-    public ResponseEntity<?> GetAllUsersFiltered(
+    public ResponseEntity<List<UserDTO>> getAllUsersFiltered(
             @RequestParam(required = false) String sex,
             @RequestParam(required = false) String hairColor
     ) {
-        try {
-            String url = "http://localhost:8080/data/users?sex=" + (sex != null ? sex : "") +
-                    "&hairColor=" + (hairColor != null ? hairColor : "");
-
-            ResponseEntity<List<UserDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
-            );
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving users: " + e.getMessage());
-        }
+        UserFilterRequest request = new UserFilterRequest();
+        request.setSex(sex);
+        request.setHairColor(hairColor);
+        return ResponseEntity.ok(adminService.getFilteredUsers(request));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/{id}")
-    public ResponseEntity<?> GetUserById(@PathVariable int id) {
-        try {
-            String url = "http://localhost:8080/users/" + id;
-            return restTemplate.exchange(url, HttpMethod.GET, adminUtil.withAuthHeaders(), UserDTO.class);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving user: " + e.getMessage());
-        }
+    public ResponseEntity<UserDTO> getUserById(@PathVariable int id) {
+        return ResponseEntity.ok(adminService.getUserById(id));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts")
-    public ResponseEntity<?> GetAllBankAccounts() {
-        try {
-            String url = "http://localhost:8080/data/accounts";
-            ResponseEntity<List<BankAccountDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
-            );
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving accounts: " + e.getMessage());
-        }
+    public ResponseEntity<List<BankAccountDTO>> getAllBankAccounts() {
+        return ResponseEntity.ok(adminService.getAllBankAccounts());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts/user/{userId}")
-    public ResponseEntity<?> GetAccountsByUserId(@PathVariable int userId) {
-        try {
-            String url = "http://localhost:8080/data/users/" + userId + "/accounts";
-            ResponseEntity<BankAccountDTO[]> response = restTemplate.exchange(
-                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), BankAccountDTO[].class);
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving accounts for user: " + e.getMessage());
-        }
+    public ResponseEntity<List<BankAccountDTO>> getAccountsByUserId(@PathVariable int userId) {
+        return ResponseEntity.ok(adminService.getAccountsByUserId(userId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/bankaccounts/{id}/operations")
-    public ResponseEntity<?> getOperationsByAccountId(
+    public ResponseEntity<List<OperationDTO>> getOperationsByAccountId(
             @PathVariable int id,
             @RequestParam(required = false) String type
     ) {
-        try {
-            String url = "http://localhost:8080/data/operations?accountId=" + id;
-            if (type != null && !type.isEmpty()) {
-                url += "&type=" + type;
-            }
-
-            ResponseEntity<List<OperationDTO>> response = restTemplate.exchange(
-                    url, HttpMethod.GET, adminUtil.withAuthHeaders(), new ParameterizedTypeReference<>() {}
-            );
-            return ResponseEntity.ok(response.getBody());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Error retrieving operations: " + e.getMessage());
-        }
+        return ResponseEntity.ok(adminService.getOperationsByAccountId(id, type));
     }
+
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/logout")
