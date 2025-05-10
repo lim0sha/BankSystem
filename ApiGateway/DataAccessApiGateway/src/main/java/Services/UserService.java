@@ -2,18 +2,18 @@ package Services;
 
 import Models.Entities.User;
 import Models.Enums.Role;
-import Repositories.IUserRepository;
+import Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder encoder;
 
     @Autowired
-    public UserService(IUserRepository repository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository repository, PasswordEncoder passwordEncoder) {
         this.userRepository = repository;
         this.encoder = passwordEncoder;
     }

@@ -1,6 +1,6 @@
 package Services;
 
-import Repositories.IUserRepository;
+import Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class CustomUserDetailService implements UserDetailsService {
-    private final IUserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Autowired
-    public CustomUserDetailService(IUserRepository repository) {
+    public CustomUserDetailService(UserRepository repository) {
         this.userRepository = repository;
     }
 
