@@ -1,5 +1,6 @@
 package Application.Models.Entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import Application.Models.Enums.HairColor;
@@ -35,6 +36,7 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}
             , orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<BankAccount> bankAccounts = new ArrayList<>();
 
     @ManyToMany(fetch = FetchType.EAGER)
