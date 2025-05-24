@@ -1,27 +1,25 @@
 package StorageService.Services;
 
-import StorageService.Models.UserEvent;
 import StorageService.Models.AccountEvent;
-import StorageService.Repositories.UserEventRepository;
+import StorageService.Models.UserEvent;
 import StorageService.Repositories.AccountEventRepository;
+import StorageService.Repositories.UserEventRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EventConsumerService {
+public class ConsumerService {
 
     private final UserEventRepository userEventRepository;
     private final AccountEventRepository accountEventRepository;
 
     @Autowired
-    public EventConsumerService(UserEventRepository userEventRepository, AccountEventRepository accountEventRepository) {
+    public ConsumerService(UserEventRepository userEventRepository, AccountEventRepository accountEventRepository) {
         this.userEventRepository = userEventRepository;
         this.accountEventRepository = accountEventRepository;
     }
 
-    @KafkaListener(topics = "client-topic", groupId = "my-group")
-    public void consumeUserEvent(String message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
+    public void ConsumeUserEvent(String message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
         try {
             Long userId = Long.parseLong(record.key());
             UserEvent event = new UserEvent(userId, message);
@@ -32,8 +30,7 @@ public class EventConsumerService {
         }
     }
 
-    @KafkaListener(topics = "account-topic", groupId = "my-group")
-    public void consumeAccountEvent(String message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
+    public void ConsumeAccountEvent(String message, org.apache.kafka.clients.consumer.ConsumerRecord<String, String> record) {
         System.out.println("Received account event: " + message);
         try {
             Long accountId = Long.parseLong(record.key());
