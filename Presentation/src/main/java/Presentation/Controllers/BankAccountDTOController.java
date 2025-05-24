@@ -6,7 +6,6 @@ import Application.ResultTypes.BankAccountResult;
 import Presentation.DTO.BankAccountDTO;
 import Presentation.DTO.CreateBankAccountDTO;
 import Presentation.Interfaces.IBaseController;
-import Presentation.Kafka.Services.KafkaProducerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,12 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class BankAccountDTOController {
 
     private final IBaseController baseController;
-    private final KafkaProducerService kafkaProducerService;
+
 
     @Autowired
-    public BankAccountDTOController(IBaseController baseController, KafkaProducerService kafkaProducerService) {
+    public BankAccountDTOController(IBaseController baseController) {
         this.baseController = baseController;
-        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Operation(summary = "Получить счет по ID", description = "Получает информацию о счете по ID")
@@ -67,7 +65,6 @@ public class BankAccountDTOController {
 
             BankAccountResult result = baseController.AddBankAccount(user.getId(), account);
             if (result instanceof BankAccountResult.Success) {
-                kafkaProducerService.sendEvent("account-topic", String.valueOf(account.getId()), account);
                 return ResponseEntity.status(HttpStatus.CREATED).body(new BankAccountDTO(account));
             } else {
                 return ResponseEntity.badRequest().body(result);
@@ -98,7 +95,6 @@ public class BankAccountDTOController {
 
         BankAccountResult result = baseController.UpdateBankAccount(existingAccount);
         if (result instanceof BankAccountResult.Success) {
-            kafkaProducerService.sendEvent("account-topic", String.valueOf(existingAccount.getId()), existingAccount);
             return ResponseEntity.ok(new BankAccountDTO(existingAccount));
         } else {
             return ResponseEntity.status(HttpStatus.CREATED).body(new BankAccountDTO(account));

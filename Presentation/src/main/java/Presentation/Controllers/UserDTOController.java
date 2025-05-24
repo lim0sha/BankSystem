@@ -4,7 +4,6 @@ import Application.Models.Entities.User;
 import Application.ResultTypes.UserResult;
 import Presentation.DTO.UserDTO;
 import Presentation.Interfaces.IBaseController;
-import Presentation.Kafka.Services.KafkaProducerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,12 +20,10 @@ import org.springframework.web.bind.annotation.*;
 public class UserDTOController {
 
     private final IBaseController baseController;
-    private final KafkaProducerService kafkaProducerService;
 
     @Autowired
-    public UserDTOController(IBaseController baseController, KafkaProducerService kafkaProducerService) {
+    public UserDTOController(IBaseController baseController) {
         this.baseController = baseController;
-        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Operation(summary = "Получить пользователя по ID", description = "Получает информацию о пользователе по ID")
@@ -52,7 +49,6 @@ public class UserDTOController {
     public ResponseEntity<?> createUser(@RequestBody User user) {
         UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
-            kafkaProducerService.sendEvent("client-topic", String.valueOf(user.getId()), user);
             return ResponseEntity.status(HttpStatus.CREATED).body(result);
         } else {
             return ResponseEntity.badRequest().body(result);
@@ -73,7 +69,6 @@ public class UserDTOController {
         }
         UserResult result = baseController.UpdateUser(user);
         if (result instanceof UserResult.Success) {
-            kafkaProducerService.sendEvent("client-topic", String.valueOf(user.getId()), user);
             return ResponseEntity.ok(new UserDTO(user));
         } else {
             return ResponseEntity.badRequest().body(result);
