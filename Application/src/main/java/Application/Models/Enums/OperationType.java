@@ -7,5 +7,4 @@ public enum OperationType {
     Deposit,
     Withdraw,
     Transfer,
-    CheckBalance
 }

@@ -1,17 +1,17 @@
-package Application.Contracts.Interfaces;
+package Presentation.Interfaces;
 
-import Application.Contracts.ResultTypes.BankAccountResult;
-import Application.Contracts.ResultTypes.OperationResult;
-import Application.Contracts.ResultTypes.UserResult;
-import Application.Models.Entites.BankAccount;
-import Application.Models.Entites.User;
+import Application.ResultTypes.BankAccountResult;
+import Application.ResultTypes.OperationResult;
+import Application.ResultTypes.UserResult;
+import Application.Models.Entities.BankAccount;
+import Application.Models.Entities.User;
 
 /**
  * Интерфейс, предоставляющий операции для управления пользователями и их банковскими счетами.
  * Включает методы для создания, удаления пользователей, управления их друзьями и банковскими счетами,
  * а также выполнения различных операций с банковскими счетами.
  */
-public interface IUserService {
+public interface IUserController {
 
     /**
      * Создание нового пользователя.
@@ -20,6 +20,22 @@ public interface IUserService {
      * @return результат операции создания пользователя.
      */
     UserResult CreateUser(User user);
+
+    /**
+     * Создание нового пользователя.
+     *
+     * @param id идентификатор пользователя, который должен быть найден.
+     * @return результат операции поиска пользователя.
+     */
+    User GetUserById(int id);
+
+    /**
+     * Создание нового пользователя.
+     *
+     * @param id идентификатор аккаунта, который должен быть найден.
+     * @return результат операции поиска аккаунта.
+     */
+    BankAccount GetBankAccountById(int id);
 
     /**
      * Удаление пользователя.
@@ -32,52 +48,52 @@ public interface IUserService {
     /**
      * Получение информации о пользователе.
      *
-     * @param user объект пользователя, информацию о котором необходимо получить.
+     * @param id идентификатор пользователя, информацию о котором необходимо получить.
      */
-    void GetUserInfo(User user);
+    void GetUserInfo(int id);
 
     /**
      * Добавление пользователя в друзья.
      *
-     * @param user объект текущего пользователя.
-     * @param other объект пользователя, которого нужно добавить в друзья.
+     * @param userId идентификатор текущего пользователя.
+     * @param otherId идентификатор пользователя, которого нужно добавить в друзья.
      */
-    void AddFriend(User user, User other);
+    void AddFriend(int userId, int otherId);
 
     /**
      * Удаление пользователя из списка друзей.
      *
-     * @param user объект текущего пользователя.
-     * @param other объект пользователя, которого нужно удалить из друзей.
+     * @param userId идентификатор текущего пользователя.
+     * @param otherId идентификатор пользователя, которого нужно удалить из друзей.
      */
-    void RemoveFriend(User user, User other);
+    void RemoveFriend(int userId, int otherId);
 
     /**
      * Добавление нового банковского счета пользователю.
      *
-     * @param user объект пользователя, которому нужно добавить банковский счет.
+     * @param userId идентификатор пользователя, которому нужно добавить банковский счет.
      * @param bankAccount объект банковского счета, который нужно добавить.
      * @return результат операции добавления банковского счета.
      */
-    BankAccountResult addBankAccount(User user, BankAccount bankAccount);
+    BankAccountResult addBankAccount(int userId, BankAccount bankAccount);
 
     /**
      * Удаление банковского счета пользователя.
      *
-     * @param user объект пользователя, чей банковский счет должен быть удален.
+     * @param userId идентификатор пользователя, чей банковский счет должен быть удален.
      * @param bankAccount объект банковского счета, который нужно удалить.
      * @return результат операции удаления банковского счета.
      */
-    BankAccountResult RemoveBankAccount(User user, BankAccount bankAccount);
+    BankAccountResult RemoveBankAccount(int userId, BankAccount bankAccount);
 
     /**
      * Проверка баланса банковского счета пользователя.
      *
-     * @param user объект пользователя, чей баланс нужно проверить.
-     * @param bankAccount объект банковского счета, баланс которого нужно проверить.
+     * @param userId идентификатор пользователя, чей баланс нужно проверить.
+     * @param bankAccountId объект банковского счета, баланс которого нужно проверить.
      * @return результат операции проверки баланса.
      */
-    OperationResult CheckBalance(User user, BankAccount bankAccount);
+    OperationResult CheckBalance(int userId, int bankAccountId);
 
     /**
      * Пополнение банковского счета.
@@ -110,8 +126,8 @@ public interface IUserService {
     /**
      * Получение истории операций для конкретного банковского счета.
      *
-     * @param bankAccount объект банковского счета, для которого нужно получить историю операций.
+     * @param bankAccountId идентификатор банковского счета, для которого нужно получить историю операций.
      * @return результат операции получения истории.
      */
-    OperationResult GetOperationHistory(BankAccount bankAccount);
+    OperationResult GetOperationHistory(int bankAccountId);
 }
