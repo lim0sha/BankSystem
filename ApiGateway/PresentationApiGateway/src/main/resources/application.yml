@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: ApiGateway
+
+  main:
+    allow-bean-definition-overriding: true
+
+  flyway:
+    enabled: false
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/JavaLabsApiDb
+    username: postgres
+    password: limosha
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  thymeleaf:
+    enabled: false
+    check-template-location: false
+
+# JWT Configuration
+jwt:
+  secret: Z2FsdGZpZDpxNDqf9r1mPZYuZAsZZEwOovUEY9NhcY46uo3bB9XzRXMKbK6R03Qp
+  expiration: 86400000 # 1 day
+
+server:
+  port: 8081
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never

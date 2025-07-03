@@ -45,7 +45,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "201", description = "Пользователь создан"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные")
     })
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
@@ -61,7 +61,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные")
     })
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@Parameter(description = "ID пользователя") @PathVariable int id, @RequestBody User user) {
         User existingUser = baseController.GetUserById(id);
         if (existingUser == null) {
@@ -80,7 +80,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "204", description = "Пользователь удален"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public ResponseEntity<?> deleteUser(@Parameter(description = "ID пользователя") @PathVariable int id) {
         User user = baseController.GetUserById(id);
         if (user == null) {
