@@ -7,6 +7,7 @@ import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
 import Presentation.Interfaces.IBaseController;
 import Presentation.Controllers.BaseController;
+import Presentation.Kafka.Services.KafkaProducerService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +27,8 @@ public class AppConfig {
             IUserManager userManager,
             IUserService userService,
             IBankAccountService bankAccountService,
-            IOperationService operationService) {
-        return new BaseController(userManager, userService, bankAccountService, operationService);
+            IOperationService operationService, KafkaProducerService kafkaProducerService) {
+        return new BaseController(userManager, userService, bankAccountService, operationService, kafkaProducerService);
     }
 
     @Bean

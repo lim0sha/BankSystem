@@ -1,5 +1,6 @@
 package Application.Models.Entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,11 +19,13 @@ public class BankAccount {
     private Double balance;
 
     @Column(name = "userlogin", nullable = false)
+    @Setter
     private String userLogin;
 
     @ManyToOne
     @Setter
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnore
     private User user;
 
     public BankAccount(User user) {

@@ -14,6 +14,7 @@ import Presentation.Interfaces.IBaseController;
 import DataAccess.Services.Interfaces.IBankAccountService;
 import DataAccess.Services.Interfaces.IOperationService;
 import DataAccess.Services.Interfaces.IUserService;
+import Presentation.Kafka.Services.KafkaProducerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -26,28 +27,36 @@ public class BaseController implements IBaseController {
     private final IUserService userService;
     private final IBankAccountService bankAccountService;
     private final IOperationService operationService;
+    private final KafkaProducerService kafkaProducerService;
 
     @Autowired
-    public BaseController(IUserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService) {
+    public BaseController(IUserManager userManager, IUserService userService, IBankAccountService bankAccountService, IOperationService operationService, KafkaProducerService kafkaProducerService) {
         this.userManager = userManager;
         this.userService = userService;
         this.bankAccountService = bankAccountService;
         this.operationService = operationService;
+        this.kafkaProducerService = kafkaProducerService;
     }
 
     @Override
     public UserResult CreateUser(User user) {
-        if (user == null || user.getLogin() == null || user.getName() == null) {
-            return new UserResult.UserCreationError("Некорректные данные пользователя");
+        try {
+            if (user == null || user.getLogin() == null || user.getName() == null) {
+                return new UserResult.UserCreationError("Некорректные данные пользователя");
+            }
+            userService.SaveUser(user);
+            kafkaProducerService.sendEvent("client-topic", String.valueOf(user.getId()), user);
+            return new UserResult.Success();
+        } catch (Exception e) {
+            return new UserResult.UserCreationError(e.getMessage());
         }
-        userService.SaveUser(user);
-        return new UserResult.Success();
     }
 
     @Override
     public UserResult UpdateUser(User user) {
         try {
             userService.SaveUser(user);
+            kafkaProducerService.sendEvent("client-topic", String.valueOf(user.getId()), user);
             return new UserResult.Success();
         } catch (Exception e) {
             return new UserResult.UserUpdateError(e.getMessage());
@@ -162,6 +171,7 @@ public class BaseController implements IBaseController {
             bankAccount.setId(null);
             userManager.AddBankAccount(user, bankAccount);
             userService.SaveUser(user);
+            kafkaProducerService.sendEvent("account-topic", String.valueOf(bankAccount.getId()), bankAccount);
             return new BankAccountResult.Success();
         } catch (Exception e) {
             return new BankAccountResult.BankAccountCreationError(e.getMessage());
@@ -175,6 +185,7 @@ public class BaseController implements IBaseController {
                 return new BankAccountResult.BankAccountUpdateError("Некорректные данные счета");
             }
             bankAccountService.UpdateAccount(bankAccount);
+            kafkaProducerService.sendEvent("account-topic", String.valueOf(bankAccount.getId()), bankAccount);
             return new BankAccountResult.Success();
         } catch (Exception e) {
             return new BankAccountResult.BankAccountUpdateError(e.getMessage());

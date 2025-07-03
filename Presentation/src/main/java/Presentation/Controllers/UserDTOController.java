@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping(value = "/users", produces = "application/json")
 public class UserDTOController {
 
     private final IBaseController baseController;
@@ -31,7 +31,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "200", description = "Пользователь найден", content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserDTO.class))),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json")
     public ResponseEntity<UserDTO> getUserById(@Parameter(description = "ID пользователя") @PathVariable int id) {
         User user = baseController.GetUserById(id);
         if (user == null) {
@@ -45,7 +45,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "201", description = "Пользователь создан"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные")
     })
-    @PostMapping("/create")
+    @PostMapping(value = "/create", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
@@ -61,7 +61,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "404", description = "Пользователь не найден"),
             @ApiResponse(responseCode = "400", description = "Некорректные данные")
     })
-    @PutMapping("/update/{id}")
+    @PutMapping(value = "/update/{id}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<?> updateUser(@Parameter(description = "ID пользователя") @PathVariable int id, @RequestBody User user) {
         User existingUser = baseController.GetUserById(id);
         if (existingUser == null) {
@@ -80,7 +80,7 @@ public class UserDTOController {
             @ApiResponse(responseCode = "204", description = "Пользователь удален"),
             @ApiResponse(responseCode = "404", description = "Пользователь не найден")
     })
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping(value = "/delete/{id}", produces = "application/json")
     public ResponseEntity<?> deleteUser(@Parameter(description = "ID пользователя") @PathVariable int id) {
         User user = baseController.GetUserById(id);
         if (user == null) {

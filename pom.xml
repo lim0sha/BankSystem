@@ -98,6 +98,7 @@
         <module>Presentation</module>
         <module>ApiGateway</module>
         <module>ApiGateway/DataAccessApiGateway</module>
+        <module>StorageService</module>
     </modules>
 
     <build>
