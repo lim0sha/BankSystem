@@ -4,66 +4,59 @@ import jakarta.persistence.*;
 import lombok.*;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
+
 import java.util.*;
 
-/**
- * Класс, представляющий пользователя системы.
- * Хранит информацию о пользователе, включая личные данные, список банковских счетов и друзей.
- */
 @Entity
 @Getter
-@Table(name = "Users")
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "login", nullable = false, unique = true)
     private String login;
 
-    @Column(nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column(name = "age", nullable = false)
     private Integer age;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "sex", nullable = false)
     private Sex sex;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "hairColor")
+    @Column(name = "haircolor")
     private HairColor hairType;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    private List<BankAccount> bankAccounts;
+    @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE}
+            , orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<BankAccount> bankAccounts = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "Friends",
-            joinColumns = @JoinColumn(name = "userId"),
-            inverseJoinColumns = @JoinColumn(name = "friendId")
+            name = "friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
-    private List<User> friends;
+    private List<User> friends = new ArrayList<>();
 
-    /**
-     * Конструктор для создания нового пользователя.
-     * Генерирует уникальный идентификатор для пользователя и инициализирует его данные.
-     *
-     * @param login логин пользователя.
-     * @param name имя пользователя.
-     * @param age возраст пользователя.
-     * @param sex пол пользователя.
-     * @param hairType цвет волос пользователя.
-     */
     public User(String login, String name, Integer age, Sex sex, HairColor hairType) {
         this.login = login;
         this.name = name;
         this.age = age;
         this.sex = sex;
         this.hairType = hairType;
-        this.bankAccounts = new ArrayList<>();
-        this.friends = new ArrayList<>();
+    }
+
+    public void addBankAccount(BankAccount bankAccount) {
+        if (!bankAccounts.contains(bankAccount)) {
+            bankAccounts.add(bankAccount);
+            bankAccount.setUser(this);
+        }
     }
 }
-

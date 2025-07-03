@@ -27,9 +27,14 @@ bin/
 /.nb-gradle/
 DataAccess.iml
 Presentation.iml
+Application.iml
+target
 
 ### VS Code ###
 .vscode/
 
 ### Mac OS ###
 .DS_Store
+
+# Environment
+.env

@@ -1,14 +1,14 @@
 package Presentation.Console;
 
+import Presentation.Configs.DotenvInitializer;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-import Presentation.Interfaces.IMenu;
-import org.flywaydb.core.Flyway;
-
+@SpringBootApplication
 public class Main {
     public static void main(String[] args) {
-        Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://localhost:5432/JavaLabsDb", "postgres", "limosha").load();
-        flyway.migrate();
-        IMenu menu = new Menu();
-        menu.Run();
+        SpringApplication app = new SpringApplication(Main.class);
+        app.addInitializers(new DotenvInitializer());
+        app.run(args);
     }
 }

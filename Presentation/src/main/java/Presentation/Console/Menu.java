@@ -1,72 +1,33 @@
 package Presentation.Console;
 
-import Application.Models.Entities.Operation;
 import Application.ResultTypes.BankAccountResult;
 import Application.ResultTypes.OperationResult;
 import Application.ResultTypes.UserResult;
-import Application.Managers.UserManager;
 import Application.Models.Entities.BankAccount;
 import Application.Models.Entities.User;
 import Application.Models.Enums.HairColor;
 import Application.Models.Enums.Sex;
-import DAO.HibernateBankAccountDAO;
-import DAO.HibernateOperationDAO;
-import DAO.HibernateUserDAO;
-import Presentation.Controllers.UserController;
-import Services.BankAccountService;
-import Services.OperationService;
-import Services.UserService;
 import Presentation.Interfaces.IMenu;
-import Utils.HibernateSessionFactoryUtil;
-import org.hibernate.Hibernate;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
+import Presentation.Interfaces.IBaseController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.stereotype.Component;
 
 import java.util.Scanner;
 
-/**
- * Класс {@code Menu} представляет консольное меню для управления пользователями и банковскими счетами.
- * Предоставляет интерфейс для создания пользователей, управления друзьями, работы с банковскими счетами
- * и выполнения финансовых операций.
- * <p>
- * Реализует интерфейс {@link IMenu}.
- * <p>
- * Основные возможности:
- * <ul>
- *     <li>Создание пользователя</li>
- *     <li>Просмотр информации о пользователе</li>
- *     <li>Управление списком друзей пользователя</li>
- *     <li>Создание банковского счета</li>
- *     <li>Проверка баланса счета</li>
- *     <li>Снятие и пополнение средств</li>
- *     <li>Перевод средств между счетами</li>
- * </ul>
- *
- * Зависимости:
- * <ul>
- *     <li>{@link UserService} - основной сервис для работы с пользователями и счетами</li>
- *     <li>{@link Scanner} - для считывания ввода пользователя</li>
- * </ul>
- *
- * @author lim0sha
- * @version 1.0
- */
+@Component
+@ComponentScan(basePackages = "Presentation")
 public class Menu implements IMenu {
 
-    private final SessionFactory sf = HibernateSessionFactoryUtil.GetSessionFactory();
-    private final UserController controller = new UserController(
-            new UserManager(), new UserService(new HibernateUserDAO(sf)),
-            new BankAccountService(new HibernateBankAccountDAO(sf)),
-            new OperationService(new HibernateOperationDAO(sf))
-    );
+    private final IBaseController baseController;
+    private final Scanner scanner;
 
+    @Autowired
+    public Menu(IBaseController baseController, Scanner scanner) {
+        this.baseController = baseController;
+        this.scanner = scanner;
+    }
 
-    private final Scanner scanner = new Scanner(System.in);
-
-    /**
-     * Запускает основное меню и обрабатывает выбор пользователя.
-     * Предоставляет доступ к основным функциям системы через консольный интерфейс.
-     */
     @Override
     public void Run() {
         while (true) {
@@ -87,13 +48,11 @@ public class Menu implements IMenu {
 
             switch (choice) {
                 case 1 -> createUser();
-                case 2 -> getUserInfo();
-                case 3 -> manageFriends();
-                case 4 -> createBankAccount();
-                case 5 -> checkBalance();
-                case 6 -> withdraw();
-                case 7 -> deposit();
-                case 8 -> transfer();
+                case 2 -> manageFriends();
+                case 3 -> createBankAccount();
+                case 4 -> withdraw();
+                case 5 -> deposit();
+                case 6 -> transfer();
                 case 0 -> {
                     System.out.println("Выход...");
                     return;
@@ -103,9 +62,6 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Создает нового пользователя с вводом данных через консоль.
-     */
     private void createUser() {
         System.out.print("Введите логин: ");
         String login = scanner.nextLine().trim();
@@ -184,11 +140,9 @@ public class Menu implements IMenu {
             return;
         }
 
-        // Создаем пользователя без использования IdGenerator, так как ID генерируется базой данных
         User user = new User(login, name, age, sex, hairColor);
 
-        // Вызываем метод создания пользователя через контроллер
-        UserResult result = controller.CreateUser(user);
+        UserResult result = baseController.CreateUser(user);
         if (result instanceof UserResult.Success) {
             System.out.println("Пользователь создан!");
         } else {
@@ -196,18 +150,6 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Выводит информацию о пользователе по введенному ID.
-     */
-    private void getUserInfo() {
-        System.out.print("Введите ID пользователя: ");
-        int userId = scanner.nextInt();
-        controller.GetUserInfo(userId);
-    }
-
-    /**
-     * Позволяет добавить или удалить друга из списка друзей пользователя.
-     */
     private void manageFriends() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
@@ -218,10 +160,10 @@ public class Menu implements IMenu {
             int action = scanner.nextInt();
 
             if (action == 1) {
-                controller.AddFriend(userId, friendId);
+                baseController.AddFriend(userId, friendId);
                 System.out.println("Друг добавлен.");
             } else if (action == 2) {
-                controller.RemoveFriend(userId, friendId);
+                baseController.RemoveFriend(userId, friendId);
                 System.out.println("Друг удален.");
             } else {
                 System.out.println("Неверная команда.");
@@ -231,20 +173,17 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Создает банковский счет для существующего пользователя.
-     */
     private void createBankAccount() {
         System.out.print("Введите ID пользователя: ");
         int userId = scanner.nextInt();
-        User user = controller.GetUserById(userId);
+        User user = baseController.GetUserById(userId);
         if (user == null) {
             System.out.println("Пользователь с ID " + userId + " не найден.");
             return;
         }
 
         BankAccount account = new BankAccount(user);
-        BankAccountResult result = controller.addBankAccount(userId, account);
+        BankAccountResult result = baseController.AddBankAccount(userId, account);
         if (result instanceof BankAccountResult.Success) {
             System.out.println("Счет создан!");
         } else {
@@ -252,34 +191,15 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Проверяет баланс на указанном банковском счете.
-     */
-    private void checkBalance() {
-        System.out.print("Введите ID счета: ");
-        int accountId = scanner.nextInt();
-        BankAccount account = controller.GetBankAccountById(accountId);
-
-        if (account == null) {
-            System.out.println("Счет не найден.");
-            return;
-        }
-
-        controller.CheckBalance(account.getUser().getId(), accountId);
-    }
-
-    /**
-     * Снимает средства с указанного банковского счета.
-     */
     private void withdraw() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
         System.out.print("Введите сумму снятия: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = controller.GetBankAccountById(accountId);
+        BankAccount account = baseController.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = controller.Withdraw(account, amount);
+            OperationResult result = baseController.Withdraw(account, amount);
 
             if (result instanceof OperationResult.Success) {
                 System.out.println("Деньги сняты.");
@@ -291,18 +211,15 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Пополняет баланс указанного банковского счета.
-     */
     private void deposit() {
         System.out.print("Введите ID счета: ");
         int accountId = scanner.nextInt();
         System.out.print("Введите сумму пополнения: ");
         double amount = scanner.nextDouble();
 
-        BankAccount account = controller.GetBankAccountById(accountId);
+        BankAccount account = baseController.GetBankAccountById(accountId);
         if (account != null) {
-            OperationResult result = controller.Deposit(account, amount);
+            OperationResult result = baseController.Deposit(account, amount);
             if (result instanceof OperationResult.Success) {
                 System.out.println("Счет пополнен.");
             } else if (result instanceof OperationResult.OperationError error) {
@@ -313,9 +230,6 @@ public class Menu implements IMenu {
         }
     }
 
-    /**
-     * Переводит средства с одного банковского счета на другой.
-     */
     private void transfer() {
         try {
             System.out.print("Введите ID счета отправителя: ");
@@ -327,11 +241,11 @@ public class Menu implements IMenu {
             System.out.print("Введите сумму перевода: ");
             double amount = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
 
-            BankAccount fromAccount = controller.GetBankAccountById(fromId);
-            BankAccount toAccount = controller.GetBankAccountById(toId);
+            BankAccount fromAccount = baseController.GetBankAccountById(fromId);
+            BankAccount toAccount = baseController.GetBankAccountById(toId);
 
             if (fromAccount != null && toAccount != null) {
-                OperationResult result = controller.Transfer(fromAccount, toAccount, amount);
+                OperationResult result = baseController.Transfer(fromAccount, toAccount, amount);
                 if (result instanceof OperationResult.Success) {
                     System.out.println("Перевод выполнен.");
                 } else if (result instanceof OperationResult.OperationError error) {
