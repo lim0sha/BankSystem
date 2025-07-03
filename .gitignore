@@ -3,6 +3,9 @@ out/
 !**/src/main/**/out/
 !**/src/test/**/out/
 .idea
+Application/target
+DataAccess/target
+Presentation/target
 
 ### Eclipse ###
 .apt_generated
